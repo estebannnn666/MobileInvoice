@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="drive_unit_values">
+        <item>Seleccione</item>
+        <item>UNIDAD</item>
+        <item>PAQUETE</item>
+        <item>ATADO</item>
+        <item>FUNDA</item>
+        <item>CAJA</item>
+        <item>BULTO</item>
+        <item>JABA</item>
+        <item>SARTA</item>
+        <item>SACO</item>
+        <item>DISPLAY</item>
+    </string-array>
+</resources>

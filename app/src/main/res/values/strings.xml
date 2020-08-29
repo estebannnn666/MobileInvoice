@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">Factura movil</string>
+    <string name="complete_name">Nombre completo</string>
+    <string name="user_email">Email</string>
+    <string name="password">Contraseña</string>
+
+    <string name="client_type">Tipo cliente</string>
+    <string name="client_document">Documento / Ruc</string>
+    <string name="client_name">Nombre / Razón social</string>
+    <string name="client_address">Dirección</string>
+    <string name="client_city">Ciudad</string>
+    <string name="client_telephone">Teléfono</string>
+
+    <string name="bar_code">Código de barras</string>
+    <string name="item_name">Nombre del artículo</string>
+    <string name="cost">Costo</string>
+    <string name="price_wholesaler">Precio venta mayorista</string>
+    <string name="price_retail">Precio venta minirista</string>
+    <string name="commission_percentage">Porcentaje de comisión</string>
+    <string name="stock">Stock existente</string>
+
+    <string name="name_tax">Nombre de impuesto</string>
+    <string name="description_tax">Descripción</string>
+    <string name="percentage_tax">Porcentaje de impuesto</string>
+
+    <string name="value_drive_unit">Valor de unidad de manejo</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+</resources>

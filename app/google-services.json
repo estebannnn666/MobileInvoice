@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "501135950129",
+    "firebase_url": "https://mobileinvoice-55cf6.firebaseio.com",
+    "project_id": "mobileinvoice-55cf6",
+    "storage_bucket": "mobileinvoice-55cf6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:501135950129:android:c28a66936aae932717b010",
+        "android_client_info": {
+          "package_name": "ec.com.innovatech.mobileinvoice"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "501135950129-9brtbl53h6bdujpls1b80j5kpofhj6vh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ec.com.innovatech.mobileinvoice",
+            "certificate_hash": "35623afaf95eab993d4f09a21374e3fc9c1cecfa"
+          }
+        },
+        {
+          "client_id": "501135950129-rpgc9hqn62mofso4gtfrc9l0qi1hk2oo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWiPYju59P224tJaKMBFF2vVnqJbnRXGo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "501135950129-rpgc9hqn62mofso4gtfrc9l0qi1hk2oo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

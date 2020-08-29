@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="5dp"
+        android:orientation="horizontal">
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="57dp"
+            android:src="@drawable/icon_contact"
+            android:id="@+id/imgItem" />
+        <LinearLayout
+            android:layout_width="230dp"
+            android:layout_height="wrap_content"
+            android:paddingLeft="15dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/lblNameClient"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:textSize="14sp"
+                android:text="Henry Esteban Gudiño barahona"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/lblDocument"
+                android:layout_width="wrap_content"
+                android:textColor="#000000"
+                android:text="1002966404"
+                android:layout_height="wrap_content"
+                android:textSize="14sp" />
+            <TextView
+                android:id="@+id/lblType"
+                android:layout_width="wrap_content"
+                android:textColor="#000000"
+                android:text="Direccion"
+                android:layout_height="wrap_content"
+                android:textSize="14sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="right"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/imgbtnUploadPendingPods"
+                android:background="@drawable/icon_edit_client"
+                android:layout_width="38dp"
+                android:layout_height="38dp"/>
+
+            <TextView
+                android:id="@+id/textView1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="2dp"
+                android:text="Editar"
+                android:textColor="#000000" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
