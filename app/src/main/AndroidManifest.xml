@@ -3,6 +3,7 @@
     package="ec.com.innovatech.mobileinvoice">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
 
     <application
         android:allowBackup="true"
@@ -11,10 +12,24 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".items.ItemActivity"
-            android:parentActivityName=".items.ListItemActivity"></activity>
-        <activity android:name=".items.ListItemActivity"
-            android:parentActivityName=".MenuActivity"/>
+        <activity
+            android:name=".charges.ListChargesActivity"
+            android:parentActivityName=".MenuActivity" />
+        <activity
+            android:name=".invoices.ListInvoiceActivity"
+            android:parentActivityName=".MenuActivity" />
+        <activity
+            android:name=".invoices.SearchClientActivity"
+            android:parentActivityName=".invoices.InvoiceActivity" />
+        <activity
+            android:name=".invoices.InvoiceActivity"
+            android:parentActivityName=".invoices.ListInvoiceActivity" />
+        <activity
+            android:name=".items.ItemActivity"
+            android:parentActivityName=".items.ListItemActivity" />
+        <activity
+            android:name=".items.ListItemActivity"
+            android:parentActivityName=".MenuActivity" />
         <activity
             android:name=".clients.ClientActivity"
             android:parentActivityName=".clients.ListClientActivity" />

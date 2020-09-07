@@ -29,6 +29,8 @@ public class ClientActivity extends AppCompatActivity {
     AlertDialog mDialog;
     RadioButton radioPerson;
     RadioButton radioEnterprise;
+    RadioButton radioMin;
+    RadioButton radioMay;
     TextInputEditText clientDocument;
     TextInputEditText clientName;
     TextInputEditText clientAddress;
@@ -47,6 +49,8 @@ public class ClientActivity extends AppCompatActivity {
         clientProvider = new ClientProvider();
         radioPerson = findViewById(R.id.radioPerson);
         radioEnterprise = findViewById(R.id.radioEnterprise);
+        radioMin = findViewById(R.id.radioMin);
+        radioMay = findViewById(R.id.radioMay);
         clientDocument = findViewById(R.id.txtClientDocument);
         clientName = findViewById(R.id.txtClientName);
         clientAddress = findViewById(R.id.txtClientAddress);
@@ -65,6 +69,13 @@ public class ClientActivity extends AppCompatActivity {
                 }else{
                     radioPerson.setChecked(false);
                     radioEnterprise.setChecked(true);
+                }
+                if(clientEdit.getBuyType().equals("Minorista")){
+                    radioMin.setChecked(true);
+                    radioMay.setChecked(false);
+                }else{
+                    radioMin.setChecked(false);
+                    radioMay.setChecked(true);
                 }
                 clientDocument.setText(clientEdit.getDocument());
                 clientName.setText(clientEdit.getName());
@@ -91,6 +102,13 @@ public class ClientActivity extends AppCompatActivity {
         if(radioEnterprise.isChecked()){
             type = (String)radioEnterprise.getText();
         }
+        String typeBuy = "";
+        if(radioMin.isChecked()){
+            typeBuy = (String)radioMin.getText();
+        }
+        if(radioMay.isChecked()){
+            typeBuy = (String)radioMay.getText();
+        }
         final String document = clientDocument.getText().toString();
         final String name = clientName.getText().toString();
         final String address = clientAddress.getText().toString();
@@ -98,10 +116,10 @@ public class ClientActivity extends AppCompatActivity {
         final String telephone = clientTelephone.getText().toString();
         final String email = clientEmail.getText().toString();
 
-        if(!type.isEmpty() && !document.isEmpty() && !name.isEmpty() && !address.isEmpty() && !city.isEmpty() && !telephone.isEmpty() && !email.isEmpty()){
+        if(!typeBuy.isEmpty() && !type.isEmpty() && !document.isEmpty() && !name.isEmpty() && !address.isEmpty() && !city.isEmpty() && !telephone.isEmpty() && !email.isEmpty()){
             if(document.length()>=10){
                 mDialog.show();
-                Client client = new Client(type, document, name, address, city, telephone, email);
+                Client client = new Client(typeBuy, type, document, name, address, city, telephone, email);
                 create(client);
             }  else{
                 Toast.makeText(ClientActivity.this, "La documento debe tener al menos 10 caracteres numericos", Toast.LENGTH_SHORT).show();

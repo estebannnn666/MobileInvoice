@@ -25,6 +25,18 @@
 
     <string name="value_drive_unit">Valor de unidad de manejo</string>
 
+    <string name="invoice_number">Número de documento</string>
+    <string name="invoice_date">Fecha de venta</string>
+    <string name="invoice_quantity">Cantidad</string>
+    <string name="invoice_subtotal">Sub total</string>
+
+    <string name="bar_code_select">Código de barras:</string>
+    <string name="item_name_select">Nombre del artículo:</string>
+    <string name="cost_select">Costo:</string>
+    <string name="price_wholesaler_select">Precio venta mayorista:</string>
+    <string name="price_retail_select">Precio venta minirista:</string>
+    <string name="stock_select">Stock existente:</string>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 

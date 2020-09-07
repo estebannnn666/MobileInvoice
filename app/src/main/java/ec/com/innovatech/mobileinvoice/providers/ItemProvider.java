@@ -16,7 +16,7 @@ public class ItemProvider {
     }
 
     public Task<Void> createItem(Item item){
-        return mDataBase.child(item.getBarCode()).setValue(item);
+        return mDataBase.child(item.getBarCode()).child("DataItem").setValue(item);
     }
 
     public DatabaseReference getListItems(){
@@ -24,6 +24,6 @@ public class ItemProvider {
     }
 
     public DatabaseReference getItem(String id){
-        return mDataBase.child(id);
+        return mDataBase.child(id).child("DataItem");
     }
 }

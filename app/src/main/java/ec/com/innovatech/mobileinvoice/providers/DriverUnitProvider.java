@@ -11,22 +11,22 @@ public class DriverUnitProvider {
     private DatabaseReference mDataBase;
 
     public DriverUnitProvider(){
-        mDataBase = FirebaseDatabase.getInstance().getReference().child("DriveUnit");
+        mDataBase = FirebaseDatabase.getInstance().getReference().child("Items");
     }
 
     public Task<Void> createDriveUnit(String barCode, DriveUnit driveUnit){
-        return mDataBase.child(barCode).child(driveUnit.getId()).setValue(driveUnit);
+        return mDataBase.child(barCode).child("DriveUnit").child(driveUnit.getId()).setValue(driveUnit);
     }
 
     public Task<Void> removeDriveUnit(String barCode, DriveUnit driveUnit){
-        return mDataBase.child(barCode).child(driveUnit.getId()).removeValue();
+        return mDataBase.child(barCode).child("DriveUnit").child(driveUnit.getId()).removeValue();
     }
 
     public DatabaseReference getListDriveUnit(String barCode){
-        return mDataBase.child(barCode);
+        return mDataBase.child(barCode).child("DriveUnit");
     }
 
     public DatabaseReference getDriveUnit(String barCode, String id){
-        return mDataBase.child(barCode).child(id);
+        return mDataBase.child(barCode).child("DriveUnit").child(id);
     }
 }

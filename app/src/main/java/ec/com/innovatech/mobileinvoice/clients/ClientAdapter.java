@@ -57,9 +57,11 @@ public class ClientAdapter extends BaseAdapter implements Filterable {
         TextView lblDocument = (TextView) convertView.findViewById(R.id.lblDocument);
         TextView lblNameClient = (TextView) convertView.findViewById(R.id.lblNameClient);
         TextView lblAddress = (TextView) convertView.findViewById(R.id.lblType);
+        TextView lblTypeBuy = (TextView) convertView.findViewById(R.id.lblTypeBuy);
         lblDocument.setText(client.getDocument());
         lblNameClient.setText(client.getName());
         lblAddress.setText(client.getAddress());
+        lblTypeBuy.setText(client.getBuyType());
         return convertView;
     }
 

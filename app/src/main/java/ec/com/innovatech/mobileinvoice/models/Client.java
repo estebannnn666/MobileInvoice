@@ -3,6 +3,7 @@ package ec.com.innovatech.mobileinvoice.models;
 import java.io.Serializable;
 
 public class Client  implements Serializable {
+    private String buyType;
     private String type;
     private String document;
     private String name;
@@ -15,7 +16,8 @@ public class Client  implements Serializable {
     public Client(){
     }
 
-    public Client(String type, String document, String name, String address, String city, String telephone, String email){
+    public Client(String buyType, String type, String document, String name, String address, String city, String telephone, String email){
+        this.buyType = buyType;
         this.type = type;
         this.document = document;
         this.name = name;
@@ -23,6 +25,14 @@ public class Client  implements Serializable {
         this.city = city;
         this.telephone = telephone;
         this.email = email;
+    }
+
+    public String getBuyType() {
+        return buyType;
+    }
+
+    public void setBuyType(String buyType) {
+        this.buyType = buyType;
     }
 
     public String getType() {

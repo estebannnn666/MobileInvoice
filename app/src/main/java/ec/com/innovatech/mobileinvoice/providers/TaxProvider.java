@@ -14,22 +14,22 @@ public class TaxProvider {
     private DatabaseReference mDataBase;
 
     public TaxProvider(){
-        mDataBase = FirebaseDatabase.getInstance().getReference().child("Taxes");
+        mDataBase = FirebaseDatabase.getInstance().getReference().child("Items");
     }
 
     public Task<Void> createTax(String barCode, Tax tax){
-        return mDataBase.child(barCode).child(tax.getId()).setValue(tax);
+        return mDataBase.child(barCode).child("Taxes").child(tax.getId()).setValue(tax);
     }
 
     public Task<Void> removeTax(String barCode, Tax tax){
-        return mDataBase.child(barCode).child(tax.getId()).removeValue();
+        return mDataBase.child(barCode).child("Taxes").child(tax.getId()).removeValue();
     }
 
     public DatabaseReference getListTaxes(String barCode){
-        return mDataBase.child(barCode);
+        return mDataBase.child(barCode).child("Taxes");
     }
 
     public DatabaseReference getTax(String barCode, String id){
-        return mDataBase.child(barCode).child(id);
+        return mDataBase.child(barCode).child("Taxes").child(id);
     }
 }

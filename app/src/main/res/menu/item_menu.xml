@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/printPdf"
+        android:title="Imprimir pdf"
+        android:icon="@drawable/icon_print_pdf"
+        app:showAsAction="always"/>
+    <item android:id="@+id/printInvoice"
+        android:title="Imprimir"
+        android:icon="@drawable/icon_print"
+        app:showAsAction="always"/>
     <item android:id="@+id/saveItem"
         android:title="Guardar"
         android:icon="@drawable/icon_save"

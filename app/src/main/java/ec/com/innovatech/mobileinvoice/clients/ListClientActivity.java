@@ -72,6 +72,7 @@ public class ListClientActivity extends AppCompatActivity {
                             public void onDataChange(@NonNull DataSnapshot snapshot) {
                                 if(snapshot.exists()){
                                     Client client = new Client();
+                                    client.setBuyType(snapshot.child("buyType").getValue().toString());
                                     client.setType(snapshot.child("type").getValue().toString());
                                     client.setDocument(snapshot.child("document").getValue().toString());
                                     client.setName(snapshot.child("name").getValue().toString());
