@@ -12,6 +12,7 @@ import android.widget.ImageView;
 
 import ec.com.innovatech.mobileinvoice.charges.ListChargesActivity;
 import ec.com.innovatech.mobileinvoice.clients.ListClientActivity;
+import ec.com.innovatech.mobileinvoice.enterprise.EnterpriseActivity;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
 import ec.com.innovatech.mobileinvoice.invoices.InvoiceActivity;
 import ec.com.innovatech.mobileinvoice.invoices.ListInvoiceActivity;
@@ -25,6 +26,7 @@ public class MenuActivity extends AppCompatActivity {
     ImageView itemMenu;
     ImageView invoiceMenu;
     ImageView accounts;
+    ImageView configuration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +38,7 @@ public class MenuActivity extends AppCompatActivity {
         itemMenu = findViewById(R.id.imgItems);
         invoiceMenu = findViewById(R.id.imgInvoices);
         accounts = findViewById(R.id.imgAccounts);
+        configuration = findViewById(R.id.imgConfiguration);
 
 
         // Go to page if clients
@@ -70,6 +73,15 @@ public class MenuActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MenuActivity.this, ListChargesActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        // Go to page if select configuration
+        configuration.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MenuActivity.this, EnterpriseActivity.class);
                 startActivity(intent);
             }
         });

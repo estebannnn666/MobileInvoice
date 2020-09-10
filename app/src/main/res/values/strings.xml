@@ -8,6 +8,7 @@
     <string name="client_document">Documento / Ruc</string>
     <string name="client_name">Nombre / Razón social</string>
     <string name="client_address">Dirección</string>
+    <string name="client_country">País</string>
     <string name="client_city">Ciudad</string>
     <string name="client_telephone">Teléfono</string>
 

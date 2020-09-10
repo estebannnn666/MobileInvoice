@@ -28,7 +28,7 @@
             android:textColor="#000000"/>
         <TextView
             android:id="@+id/lblUnitValue"
-            android:layout_width="50dp"
+            android:layout_width="47dp"
             android:layout_marginTop="4dp"
             android:layout_height="wrap_content"
             android:textSize="11dp"
@@ -37,12 +37,21 @@
             android:textColor="#000000"/>
         <TextView
             android:id="@+id/lblSubTotal"
-            android:layout_width="70dp"
+            android:layout_width="60dp"
             android:layout_marginTop="4dp"
             android:layout_height="wrap_content"
             android:textSize="11dp"
             android:gravity="right"
             android:text="3660.98"
+            android:textColor="#000000"/>
+        <TextView
+            android:id="@+id/lblDetailTax"
+            android:layout_width="13dp"
+            android:layout_marginTop="4dp"
+            android:layout_height="wrap_content"
+            android:textSize="11dp"
+            android:gravity="right"
+            android:text=""
             android:textColor="#000000"/>
         <ImageView
             android:layout_marginTop="3dp"

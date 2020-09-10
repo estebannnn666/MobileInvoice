@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 
 import dmax.dialog.SpotsDialog;
 
@@ -17,10 +16,16 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
+import ec.com.innovatech.mobileinvoice.enterprise.EnterpriseActivity;
+import ec.com.innovatech.mobileinvoice.includes.MyToastMessage;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
+import ec.com.innovatech.mobileinvoice.providers.EnterpriseProvider;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -30,19 +35,21 @@ public class LoginActivity extends AppCompatActivity {
     FirebaseAuth fireAuth;
     DatabaseReference dataBaseRef;
     AlertDialog alertDialog;
+    EnterpriseProvider enterpriseProvider;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
         MyToolBar.show(this,"Login", true);
+        alertDialog =  new SpotsDialog.Builder().setContext(LoginActivity.this).setMessage("Espere un momento").build();
+        enterpriseProvider = new EnterpriseProvider();
+
         textInputEmail = findViewById(R.id.txtInputEmail);
         textInputPassword = findViewById(R.id.txtInputPassword);
         buttonLogin = findViewById(R.id.bottomLogin);
         fireAuth = FirebaseAuth.getInstance();
         dataBaseRef = FirebaseDatabase.getInstance().getReference();
-        alertDialog =  new SpotsDialog.Builder().setContext(LoginActivity.this).setMessage("Espere un momento").build();
 
         buttonLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -62,20 +69,36 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if(task.isSuccessful()){
-                            Intent intent = new Intent(LoginActivity.this, MenuActivity.class);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                            startActivity(intent);
+                            MyToastMessage.susses(LoginActivity.this, "Ingreso de usuario exitoso");
+                            enterpriseProvider.getListEnterprise().addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                    if (snapshot.exists()) {
+                                        Intent intent = new Intent(LoginActivity.this, MenuActivity.class);
+                                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                        startActivity(intent);
+                                    } else {
+                                        Intent intent = new Intent(LoginActivity.this, EnterpriseActivity.class);
+                                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                        startActivity(intent);
+                                    }
+                                }
+
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError error) {
+                                }
+                            });
                         }else{
-                            Toast.makeText(LoginActivity.this, "El email o la contraseña son incorrectos", Toast.LENGTH_SHORT).show();
+                            MyToastMessage.error(LoginActivity.this, "El email o la contraseña son incorrectos");
                         }
                         alertDialog.dismiss();
                     }
                 });
             }else{
-                Toast.makeText(LoginActivity.this, "La contraseña debe tener al menos 6 caracteres", Toast.LENGTH_SHORT).show();
+                MyToastMessage.error(LoginActivity.this, "La contraseña debe tener al menos 6 caracteres");
             }
         }else{
-            Toast.makeText(LoginActivity.this, "El email y la contraseña son campos requeridos", Toast.LENGTH_SHORT).show();
+            MyToastMessage.error(LoginActivity.this, "El email y la contraseña son campos requeridos");
         }
     }
 }

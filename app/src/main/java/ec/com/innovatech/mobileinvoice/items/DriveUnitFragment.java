@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import android.view.LayoutInflater;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import dmax.dialog.SpotsDialog;
 import ec.com.innovatech.mobileinvoice.R;
 import ec.com.innovatech.mobileinvoice.constants.DriverUnitCatalog;
+import ec.com.innovatech.mobileinvoice.includes.MyToastMessage;
 import ec.com.innovatech.mobileinvoice.models.DriveUnit;
 import ec.com.innovatech.mobileinvoice.providers.DriverUnitProvider;
 
@@ -87,7 +89,7 @@ public class DriveUnitFragment extends Fragment {
                 if(!idTax.isEmpty()) {
                     viewDialogDriverUnit();
                 }else{
-                    Toast.makeText(getContext(), "Primero debe guardar datos del artículo", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.warn((AppCompatActivity) getActivity(), "Primero debe guardar datos del artículo");
                 }
             }
         });
@@ -105,7 +107,7 @@ public class DriveUnitFragment extends Fragment {
                         cont++;
                     }
                 }else{
-                    Toast.makeText(getContext(), "No existen impuestos para guardar", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.info((AppCompatActivity) getActivity(), "No existen impuestos para guardar");
                 }
             }
         });
@@ -118,7 +120,7 @@ public class DriveUnitFragment extends Fragment {
                 if(driveUnit.getId() != null) {
                     delete(barcodeTax, driveUnit);
                 }else {
-                    Toast.makeText(getActivity(), "Los datos se eliminarion correctamente", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.susses((AppCompatActivity) getActivity(), "Los datos se eliminarion correctamente");
                 }
                 listDriverUnit.remove(driveUnit);
                 driverUnirAdapter = new DriverUnitAdapter(getContext(), listDriverUnit);
@@ -141,12 +143,12 @@ public class DriveUnitFragment extends Fragment {
                 for (DriveUnit driver : listDriverUnit){
                     if(driver.getIsDefault().equals("true") && isDefault.equals("true")){
                         validation = false;
-                        Toast.makeText(getContext(), "Ya existe una unidad de manejo por defecto", Toast.LENGTH_SHORT).show();
+                        MyToastMessage.error((AppCompatActivity) getActivity(), "Ya existe una unidad de manejo por defecto");
                         break;
                     }
                     if(driver.getUnitDriveValueCode().equals(driverUnitCatalogValue) && driver.getUnitDriveValue().equals(driverUnitValue)){
                         validation = false;
-                        Toast.makeText(getContext(), "Ya existe una unidad de manejo con el valor ingresado", Toast.LENGTH_SHORT).show();
+                        MyToastMessage.error((AppCompatActivity) getActivity(), "Ya existe una unidad de manejo con el valor ingresado");
                         break;
                     }
                 }
@@ -157,14 +159,14 @@ public class DriveUnitFragment extends Fragment {
                     listDriveUnitView.setAdapter(driverUnirAdapter);
                     txtDriverUnitValue.setText("");
                     chkDefault.setChecked(false);
-                    Toast.makeText(getContext(), "La unidad de manejo se agregó a la lista", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.info((AppCompatActivity) getActivity(), "La unidad de manejo se agregó a la lista");
                     dialog.dismiss();
                 }
             } else {
-                Toast.makeText(getContext(), "Ingrese todos los campos requeridos", Toast.LENGTH_SHORT).show();
+                MyToastMessage.error((AppCompatActivity) getActivity(), "Ingrese todos los campos requeridos");
             }
         }else{
-            Toast.makeText(getContext(), "Primero debe guardar datos del artículo", Toast.LENGTH_SHORT).show();
+            MyToastMessage.warn((AppCompatActivity) getActivity(), "Primero debe guardar datos del artículo");
         }
     }
 
@@ -174,9 +176,9 @@ public class DriveUnitFragment extends Fragment {
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
                     mDialog.dismiss();
-                    Toast.makeText(getActivity(), "Los datos se guardaron correctamente", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.susses((AppCompatActivity) getActivity(), "Los datos se guardaron correctamente");
                 } else {
-                    Toast.makeText(getActivity(), "Error al guardar los datos", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.error((AppCompatActivity) getActivity(), "Error al guardar los datos");
                 }
             }
         });
@@ -188,9 +190,9 @@ public class DriveUnitFragment extends Fragment {
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
                     mDialog.dismiss();
-                    Toast.makeText(getActivity(), "Los datos se eliminarion correctamente", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.susses((AppCompatActivity) getActivity(), "Los datos se eliminarion correctamente");
                 } else {
-                    Toast.makeText(getActivity(), "Error al eliminar los datos", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.error((AppCompatActivity) getActivity(), "Error al guardar los datos");
                 }
             }
         });

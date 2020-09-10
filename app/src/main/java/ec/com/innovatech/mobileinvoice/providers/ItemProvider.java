@@ -19,6 +19,10 @@ public class ItemProvider {
         return mDataBase.child(item.getBarCode()).child("DataItem").setValue(item);
     }
 
+    public Task<Void> updateStockItem(String barCode, String newStock){
+        return mDataBase.child(barCode).child("DataItem").child("stock").setValue(newStock);
+    }
+
     public DatabaseReference getListItems(){
         return mDataBase;
     }

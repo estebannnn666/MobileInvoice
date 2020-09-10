@@ -50,12 +50,16 @@ public class DetailInvoiceAdapter extends BaseAdapter{
         TextView descriptionItem = (TextView) convertView.findViewById(R.id.lblDescriptionItem);
         TextView unitValue = (TextView) convertView.findViewById(R.id.lblUnitValue);
         TextView subTotal = (TextView) convertView.findViewById(R.id.lblSubTotal);
+        TextView detailTax = (TextView)convertView.findViewById(R.id.lblDetailTax);
         String unitValueFormat = ValidationUtil.getTwoDecimal(Double.valueOf(detailInvoice.getUnitValue()));
         String subTotalFormat = ValidationUtil.getTwoDecimal(Double.valueOf(detailInvoice.getSubTotal()));
         quantity.setText(detailInvoice.getQuantity());
         descriptionItem.setText(detailInvoice.getDescription());
         unitValue.setText(unitValueFormat);
         subTotal.setText(subTotalFormat);
+        if(detailInvoice.getExistsTax() != null && detailInvoice.getExistsTax().equals("true")){
+            detailTax.setText("(I)");
+        }
         return convertView;
     }
 }

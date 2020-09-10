@@ -1,202 +1,162 @@
 package ec.com.innovatech.mobileinvoice.charges;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
+import android.widget.AdapterView;
+import android.widget.ListView;
 import android.widget.TextView;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Set;
-import java.util.UUID;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+
+import dmax.dialog.SpotsDialog;
 import ec.com.innovatech.mobileinvoice.R;
+import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
+import ec.com.innovatech.mobileinvoice.invoices.HeaderInvoiceAdapter;
+import ec.com.innovatech.mobileinvoice.invoices.InvoiceActivity;
+import ec.com.innovatech.mobileinvoice.models.HeaderInvoice;
+import ec.com.innovatech.mobileinvoice.providers.InvoiceProvider;
+import ec.com.innovatech.mobileinvoice.util.ValidationUtil;
 
 public class ListChargesActivity extends AppCompatActivity {
 
-    EditText txtText;
-    Button btnConnect;
-    Button btnDisconnect;
-    Button btnPrint;
-    TextView lblPrinter;
-    TextView lblPrintName;
-
-    BluetoothAdapter bluetoothAdapter;
-    BluetoothSocket bluetoothSocket;
-    BluetoothDevice bluetoothDevice;
-
-    OutputStream outputStream;
-    InputStream inputStream;
-    Thread thread;
-
-    byte[] readBuffer;
-    int readBufferPosition;
-    volatile boolean stopWorker;
+    AlertDialog mDialog;
+    ListView listView;
+    HeaderInvoiceAdapter headerInvoiceAdapter;
+    ArrayList<HeaderInvoice> headerInvoices;
+    InvoiceProvider invoiceProvider;
+    TextView lblListEmpty;
+    TextView lblTotalAccounts;
+    TextView lblNumberDocuments;
+    double totalValue;
+    int totalDocuments;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_charges);
-        txtText = findViewById(R.id.txtText);
-        btnConnect = findViewById(R.id.btnConnect);
-        btnDisconnect = findViewById(R.id.btnDisconnect);
-        btnPrint = findViewById(R.id.btnPrint);
-        lblPrinter = findViewById(R.id.lblPrinter);
-        lblPrintName = findViewById(R.id.lblPrintName);
-
-        btnConnect.setOnClickListener(new View.OnClickListener() {
+        MyToolBar.show(this,"Cuentas por cobrar", true);
+        mDialog = new SpotsDialog.Builder().setContext(ListChargesActivity.this).setMessage("Espere un momento").build();
+        listView = findViewById(R.id.listInvoiceCharges);
+        lblListEmpty =  findViewById(R.id.txtInvoiceChargeEmpty);
+        lblTotalAccounts = findViewById(R.id.lblTotalAccounts);
+        lblNumberDocuments = findViewById(R.id.lblNumberDocuments);
+        invoiceProvider = new InvoiceProvider();
+        headerInvoices = new ArrayList<>();
+        loadInvoicesNotPaid();
+        totalValue = 0;
+        /*listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onClick(View v) {
-                try {
-                    findBluetoothDevice();
-                    openBluetoothPrinter();
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent intent = new Intent(ListChargesActivity.this, InvoiceActivity.class);
+                intent.putExtra("INVOICE_SELECT", headerInvoices.get(position));
+                startActivity(intent);
             }
-        });
+        });*/
 
-        btnDisconnect.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    disconnect();
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        btnPrint.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    printData();
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
-        });
 
     }
 
-    void findBluetoothDevice(){
-        try {
-            bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            if(bluetoothAdapter == null){
-                lblPrintName.setText("No existen dispositivos");
-            }
-            if(bluetoothAdapter.isEnabled())
-            {
-                Intent enableBT = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBT, 0);
-            }
-            Set<BluetoothDevice> pairedDevice = bluetoothAdapter.getBondedDevices();
-            if(pairedDevice.size() > 0){
-                for(BluetoothDevice pairedDev: pairedDevice){
-                    if(pairedDev.getName().equals("IposPrinter")){
-                        bluetoothDevice = pairedDev;
-                        lblPrintName.setText("Impresora Bluetooth emparejada"+pairedDev.getName());
-                        break;
-                    }
-                }
-            }
-            lblPrintName.setText("Impresora Bluetooth emparejada");
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    void openBluetoothPrinter() throws IOException {
-        try {
-            UUID uuidString = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
-            bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(uuidString);
-            bluetoothSocket.connect();
-            outputStream = bluetoothSocket.getOutputStream();
-            inputStream = bluetoothSocket.getInputStream();
-            beginListenData();
-        }catch (Exception e){
-
-        }
-    }
-
-    private void beginListenData() {
-        try {
-            final Handler handler = new Handler();
-            final byte delimiter = 10;
-            stopWorker = false;
-            readBufferPosition = 0;
-            readBuffer = new byte[1024];
-
-            thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    while (!Thread.currentThread().isInterrupted() && !stopWorker){
-                        try {
-                            int byteAvailable = inputStream.available();
-                            if(byteAvailable > 0){
-                                byte[] packetByte = new byte[byteAvailable];
-                                inputStream.read(packetByte);
-                                for (int i = 0; i < byteAvailable; i++){
-                                    byte b = packetByte[i];
-                                    if(b == delimiter){
-                                        byte[] encodeByte = new byte[readBufferPosition];
-                                        System.arraycopy(readBuffer, 0, encodeByte, 0, encodeByte.length);
-                                        final String data = new String(encodeByte, "US-ASCII");
-                                        readBufferPosition = 0;
-                                        handler.post(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                lblPrintName.setText(data);
-                                            }
-                                        });
-                                    }else{
-                                        readBuffer[readBufferPosition++] = b;
+    public void loadInvoicesNotPaid(){
+        mDialog.show();
+        invoiceProvider.getListInvoices().addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    lblListEmpty.setText("");
+                    totalDocuments = 0;
+                    for (final DataSnapshot invoiceNode: snapshot.getChildren()){
+                        invoiceProvider.getInvoice(invoiceNode.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                if(snapshot.exists()){
+                                    if(snapshot.child("paidOut").getValue().toString().equals("false")){
+                                        HeaderInvoice headerInvoice = new HeaderInvoice();
+                                        headerInvoice.setTypeDocumentCode(snapshot.child("typeDocumentCode").getValue().toString());
+                                        headerInvoice.setTotalNotTax(snapshot.child("totalNotTax").getValue().toString());
+                                        headerInvoice.setTotalTax(snapshot.child("totalTax").getValue().toString());
+                                        headerInvoice.setTotalIva(snapshot.child("totalIva").getValue().toString());
+                                        headerInvoice.setSubTotal(snapshot.child("subTotal").getValue().toString());
+                                        headerInvoice.setTotalInvoice(snapshot.child("totalInvoice").getValue().toString());
+                                        headerInvoice.setPaidOut(snapshot.child("paidOut").getValue().toString());
+                                        headerInvoice.setDateDocument(snapshot.child("dateDocument").getValue().toString());
+                                        headerInvoice.setNumberDocument(snapshot.child("numberDocument").getValue().toString());
+                                        headerInvoice.setClientPhone(snapshot.child("clientPhone").getValue().toString());
+                                        headerInvoice.setClientDirection(snapshot.child("clientDirection").getValue().toString());
+                                        headerInvoice.setClientName(snapshot.child("clientName").getValue().toString());
+                                        headerInvoice.setClientDocument(snapshot.child("clientDocument").getValue().toString());
+                                        headerInvoice.setValueDocumentCode(snapshot.child("valueDocumentCode").getValue().toString());
+                                        headerInvoices.add(headerInvoice);
+                                        headerInvoiceAdapter = new HeaderInvoiceAdapter(getBaseContext(), headerInvoices);
+                                        listView.setAdapter(headerInvoiceAdapter);
+                                        totalValue = totalValue + Double.parseDouble(headerInvoice.getTotalInvoice());
+                                        totalDocuments++;
+                                        String totalFormat = ValidationUtil.getTwoDecimal(totalValue);
+                                        lblTotalAccounts.setText(totalFormat);
+                                        lblNumberDocuments.setText(""+totalDocuments);
                                     }
                                 }
+                                mDialog.dismiss();
                             }
-                        }catch (Exception e){
-                            stopWorker = true;
-                        }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {
+
+                            }
+                        });
                     }
+                }else{
+                    lblListEmpty.setText("No existen facturas pendientes de cobro");
+                    mDialog.dismiss();
                 }
-            });
-            thread.start();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.invoice_menu, menu);
+        MenuItem menuItem = menu.findItem(R.id.searchInvoice);
+        SearchView searchView = (SearchView)menuItem.getActionView();
+        searchView.setQueryHint("Buscarque por CED/RUC");
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
 
-    void printData()throws IOException{
-        try {
-            String msg = txtText.getText().toString();
-            msg += "\n";
-            outputStream.write(msg.getBytes());
-            lblPrintName.setText("Printing text");
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                headerInvoiceAdapter.getFilter().filter(newText);
+                return true;
+            }
+        });
+        return super.onCreateOptionsMenu(menu);
     }
 
-    void disconnect() throws IOException{
-        try {
-            stopWorker = true;
-            outputStream.close();
-            inputStream.close();
-            bluetoothSocket.close();
-            lblPrintName.setText("Printer disconnect");
-        }catch (Exception e){
-            e.printStackTrace();
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if(item.getItemId() == R.id.newInvoice){
+            Intent intent = new Intent(ListChargesActivity.this, InvoiceActivity.class);
+            startActivity(intent);
         }
+        return super.onOptionsItemSelected(item);
     }
 }

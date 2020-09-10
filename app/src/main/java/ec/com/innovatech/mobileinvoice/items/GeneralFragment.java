@@ -24,6 +24,7 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import dmax.dialog.SpotsDialog;
 import ec.com.innovatech.mobileinvoice.R;
+import ec.com.innovatech.mobileinvoice.includes.MyToastMessage;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
 import ec.com.innovatech.mobileinvoice.models.Item;
 import ec.com.innovatech.mobileinvoice.providers.ItemProvider;
@@ -111,10 +112,10 @@ public class GeneralFragment extends Fragment {
                 editor.apply();
                 create(item);
             }  else{
-                Toast.makeText(getActivity(), "La código de barras debe tener de 1 a 10 caracteres numéricos", Toast.LENGTH_SHORT).show();
+                MyToastMessage.error((AppCompatActivity) getActivity(), "El código de barras debe tener de 1 a 10 caracteres numéricos");
             }
         }else{
-            Toast.makeText(getActivity(), "Ingrese todos los campos requeridos", Toast.LENGTH_SHORT).show();
+            MyToastMessage.error((AppCompatActivity) getActivity(), "Ingrese todos los campos requeridos");
         }
     }
 
@@ -122,14 +123,12 @@ public class GeneralFragment extends Fragment {
         itemProvider.createItem(item).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
-                    mDialog.hide();
-                    Toast.makeText(getActivity(), "El los datos se guardaron correctamente", Toast.LENGTH_SHORT).show();
-                    //Intent intent = new Intent(getActivity(), ListItemActivity.class);
-                    //startActivity(intent);
-                } else {
-                    Toast.makeText(getActivity(), "No se pudo crear el artículo", Toast.LENGTH_SHORT).show();
-                }
+            if (task.isSuccessful()) {
+                mDialog.hide();
+                MyToastMessage.susses((AppCompatActivity) getActivity(), "Los datos se guardaron correctamente");
+            } else {
+                MyToastMessage.error((AppCompatActivity) getActivity(), "No se pudo crear el artículo");
+            }
             }
         });
     }

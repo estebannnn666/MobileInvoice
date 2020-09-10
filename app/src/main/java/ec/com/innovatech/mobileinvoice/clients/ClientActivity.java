@@ -17,6 +17,8 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import dmax.dialog.SpotsDialog;
 import ec.com.innovatech.mobileinvoice.R;
+import ec.com.innovatech.mobileinvoice.RegisterActivity;
+import ec.com.innovatech.mobileinvoice.includes.MyToastMessage;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
 import ec.com.innovatech.mobileinvoice.models.Client;
 import ec.com.innovatech.mobileinvoice.providers.ClientProvider;
@@ -122,10 +124,10 @@ public class ClientActivity extends AppCompatActivity {
                 Client client = new Client(typeBuy, type, document, name, address, city, telephone, email);
                 create(client);
             }  else{
-                Toast.makeText(ClientActivity.this, "La documento debe tener al menos 10 caracteres numericos", Toast.LENGTH_SHORT).show();
+                MyToastMessage.error(ClientActivity.this, "La documento debe tener al menos 10 caracteres numericos");
             }
         }else{
-            Toast.makeText(ClientActivity.this, "Ingrese todos los campos requeridos", Toast.LENGTH_SHORT).show();
+            MyToastMessage.error(ClientActivity.this, "Ingrese todos los campos requeridos");
         }
     }
 
@@ -134,12 +136,13 @@ public class ClientActivity extends AppCompatActivity {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
+                    MyToastMessage.susses(ClientActivity.this, "Los datos del cliente se gardaron correctamente");
                     mDialog.hide();
                     Intent intent = new Intent(ClientActivity.this, ListClientActivity.class);
                     //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
                 } else {
-                    Toast.makeText(ClientActivity.this, "No se pudo crear el cliente", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.error(ClientActivity.this, "No se pudo crear el cliente");
                 }
             }
         });

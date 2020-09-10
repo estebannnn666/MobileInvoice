@@ -18,16 +18,17 @@
             android:paddingTop="50dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="50dp"
+            android:layout_marginBottom="5dp"
             android:orientation="horizontal">
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginRight="10dp"
                 android:orientation="vertical">
                 <ImageView
                     android:id="@+id/imgClient"
-                    android:layout_width="150dp"
-                    android:layout_height="150dp"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
                     android:layout_marginTop="10dp"
                     android:src="@mipmap/clients_menu"/>
                 <TextView
@@ -35,18 +36,19 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAlignment="center"
-                    android:textSize="20sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
                     android:text="Clientes" />
             </LinearLayout>
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
                 android:orientation="vertical">
                 <ImageView
                     android:id="@+id/imgItems"
-                    android:layout_width="150dp"
-                    android:layout_height="150dp"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
                     android:layout_marginTop="10dp"
                     android:src="@mipmap/items_menu"/>
                 <TextView
@@ -54,9 +56,57 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAlignment="center"
-                    android:textSize="20sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
                     android:text="Productos" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:orientation="horizontal">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="10dp"
+                android:orientation="vertical">
+                <ImageView
+                    android:id="@+id/imgInvoices"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_marginTop="10dp"
+                    android:src="@mipmap/invoice_menu"/>
+                <TextView
+                    android:id="@+id/textInvoice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:text="Facturas" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:orientation="vertical">
+                <ImageView
+                    android:id="@+id/imgAccounts"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_marginTop="10dp"
+                    android:src="@mipmap/acount_menu"/>
+                <TextView
+                    android:id="@+id/textPayment"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:text="Cuentas cobrar" />
             </LinearLayout>
         </LinearLayout>
 
@@ -68,40 +118,42 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginRight="10dp"
                 android:orientation="vertical">
                 <ImageView
-                    android:id="@+id/imgInvoices"
-                    android:layout_width="150dp"
-                    android:layout_height="150dp"
+                    android:id="@+id/imgPreSale"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
                     android:layout_marginTop="10dp"
-                    android:src="@mipmap/invoice_menu"/>
+                    android:src="@mipmap/preorder_menu"/>
                 <TextView
-                    android:id="@+id/textInvoice"
+                    android:id="@+id/textPreSale"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAlignment="center"
-                    android:textSize="20sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
-                    android:text="Facturas" />
+                    android:text="Pre venta" />
             </LinearLayout>
             <LinearLayout
+                android:layout_marginLeft="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
                 <ImageView
-                    android:id="@+id/imgAccounts"
-                    android:layout_width="150dp"
-                    android:layout_height="150dp"
+                    android:id="@+id/imgConfiguration"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
                     android:layout_marginTop="10dp"
-                    android:src="@mipmap/acount_menu"/>
+                    android:src="@mipmap/config_menu"/>
                 <TextView
-                    android:id="@+id/textPayment"
+                    android:id="@+id/textEnterprise"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAlignment="center"
-                    android:textSize="20sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
-                    android:text="Cuentas cobrar" />
+                    android:text="Configurar" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

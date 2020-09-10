@@ -47,15 +47,23 @@ import java.util.Set;
 import java.util.UUID;
 
 import dmax.dialog.SpotsDialog;
+import ec.com.innovatech.mobileinvoice.MenuActivity;
 import ec.com.innovatech.mobileinvoice.R;
+import ec.com.innovatech.mobileinvoice.RegisterActivity;
+import ec.com.innovatech.mobileinvoice.clients.ClientAdapter;
+import ec.com.innovatech.mobileinvoice.enterprise.EnterpriseActivity;
+import ec.com.innovatech.mobileinvoice.includes.MyToastMessage;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
 import ec.com.innovatech.mobileinvoice.models.Client;
 import ec.com.innovatech.mobileinvoice.models.DetailInvoice;
 import ec.com.innovatech.mobileinvoice.models.DriveUnit;
 import ec.com.innovatech.mobileinvoice.models.DriverUnitSpinner;
+import ec.com.innovatech.mobileinvoice.models.Enterprise;
 import ec.com.innovatech.mobileinvoice.models.HeaderInvoice;
 import ec.com.innovatech.mobileinvoice.models.Item;
+import ec.com.innovatech.mobileinvoice.providers.ClientProvider;
 import ec.com.innovatech.mobileinvoice.providers.DriverUnitProvider;
+import ec.com.innovatech.mobileinvoice.providers.EnterpriseProvider;
 import ec.com.innovatech.mobileinvoice.providers.InvoiceProvider;
 import ec.com.innovatech.mobileinvoice.providers.ItemProvider;
 import ec.com.innovatech.mobileinvoice.providers.TaxProvider;
@@ -77,6 +85,7 @@ public class InvoiceActivity extends AppCompatActivity{
     ArrayList<Item> listItems;
     ItemProvider itemProvider;
     TaxProvider taxProvider;
+    EnterpriseProvider enterpriseProvider;
     TextView lblListEmpty;
     EditText txtSearchItem;
     EditText txtAddQuantity;
@@ -103,6 +112,7 @@ public class InvoiceActivity extends AppCompatActivity{
     ArrayAdapter<DriverUnitSpinner> comboAdapter;
     DriveUnit driveUnitSelect;
     Client clientSearch;
+    Enterprise enterprise;
     Button btnAddDetail;
     ListView listDetailInvoiceView;
     DetailInvoiceAdapter detailInvoiceAdapter;
@@ -121,6 +131,8 @@ public class InvoiceActivity extends AppCompatActivity{
     byte[] readBuffer;
     int readBufferPosition;
     volatile boolean stopWorker;
+    boolean editInvoice;
+    boolean printActive;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,7 +144,6 @@ public class InvoiceActivity extends AppCompatActivity{
         }catch (Exception e){
             e.printStackTrace();
         }
-
         mPref = getApplicationContext().getSharedPreferences("invoice", MODE_PRIVATE);
         editor = mPref.edit();
         MyToolBar.show(this,"Nueva venta", true);
@@ -151,17 +162,23 @@ public class InvoiceActivity extends AppCompatActivity{
         chkPayOut = findViewById(R.id.chkPayOut);
         radioInvoice = findViewById(R.id.radioInvoice);
         radioNoteSale = findViewById(R.id.radioNoteSale);
-
+        editInvoice = true;
+        printActive = false;
         headerInvoice = new HeaderInvoice();
         listDetailInvoice = new ArrayList<>();
 
         driverUnitProvider = new DriverUnitProvider();
         invoiceProvider = new InvoiceProvider();
+        enterpriseProvider = new EnterpriseProvider();
+        // Load data head invoice
+        loadDataEnterprise();
 
         Bundle resourceBundle = getIntent().getExtras();
         if(resourceBundle != null) {
             HeaderInvoice invoiceEdit = (HeaderInvoice)resourceBundle.getSerializable("INVOICE_SELECT");
             if(invoiceEdit != null) {
+                editInvoice = false;
+                printActive = true;
                 if(invoiceEdit.getValueDocumentCode().equals("Factura")){
                     radioInvoice.setChecked(true);
                     radioNoteSale.setChecked(false);
@@ -183,13 +200,25 @@ public class InvoiceActivity extends AppCompatActivity{
                 }else {
                     chkPayOut.setChecked(false);
                 }
-                loadDetailInvoice(invoiceEdit.getNumberDocument()   );
+                loadDetailInvoice(invoiceEdit.getNumberDocument());
+                // Disabled the inputs when are invoice view mode
+                txtNumberInvoice.setEnabled(false);
+                txInvoiceDate.setEnabled(false);
+                txtInvoiceClient.setEnabled(false);
+                chkPayOut.setEnabled(false);
+                btnAddClient.setEnabled(false);
+                radioNoteSale.setEnabled(false);
+                radioInvoice.setEnabled(false);
+                btnOpenItems.setEnabled(false);
                 MyToolBar.show(this,"Ver factura", true);
             }
 
             clientSearch = (Client) resourceBundle.getSerializable("CLIENT_SELECT");
             if (clientSearch != null) {
                 txtInvoiceClient.setText(clientSearch.getName());
+            }else if(invoiceEdit != null) {
+                clientSearch = new Client();
+                clientSearch.setDocument(invoiceEdit.getClientDocument());
             }
             String numberInvoice = mPref.getString("numberInvoice", "");
             String invoiceDate = mPref.getString("invoiceDate", "");
@@ -266,10 +295,10 @@ public class InvoiceActivity extends AppCompatActivity{
                     if (clientSearch != null) {
                         viewDialogListItems();
                     } else {
-                        Toast.makeText(InvoiceActivity.this, "Seleccione el cliente para agregar detalles", Toast.LENGTH_SHORT).show();
+                        MyToastMessage.info(InvoiceActivity.this, "Seleccione el cliente para agregar detalles");
                     }
                 }else{
-                    Toast.makeText(InvoiceActivity.this, "Ingrese los datos de la cabecera del comprobante", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.info(InvoiceActivity.this, "Ingrese los datos de la cabecera del comprobante");
                 }
             }
         });
@@ -288,7 +317,7 @@ public class InvoiceActivity extends AppCompatActivity{
             @Override
             public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
                 // +1 because January is zero
-                final String selectedDate = year + " / " + (month+1) + " / " + dayOfMonth;
+                final String selectedDate = year + "-" + ((month+1) < 10 ? "0"+(month+1):""+(month+1)) + "-" + (dayOfMonth < 10 ? "0"+dayOfMonth:""+dayOfMonth);
                 txInvoiceDate.setText(selectedDate);
             }
         });
@@ -365,8 +394,8 @@ public class InvoiceActivity extends AppCompatActivity{
         lblNameItem.setText(item.getNameItem());
         lblPriceMay.setText(priceWholesalerFormat);
         lblPriceMin.setText(priceRetailFormat);
-        lblCost.setText(item.getCost());
-        lblStock.setText(costFormat);
+        lblCost.setText(costFormat);
+        lblStock.setText(item.getStock());
         // Add items selected
         DriverUnitSpinner driverUnitSpinner = new DriverUnitSpinner(0, "Seleccione");
         listDriverUnitSpinner.add(driverUnitSpinner);
@@ -416,7 +445,7 @@ public class InvoiceActivity extends AppCompatActivity{
                         txtSubTotal.setText("");
                     }
                 }else{
-                    Toast.makeText(InvoiceActivity.this, "Seleccione la unidad de manejo", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.error(InvoiceActivity.this, "Seleccione la unidad de manejo");
                 }
             }
 
@@ -552,22 +581,40 @@ public class InvoiceActivity extends AppCompatActivity{
         }
 
         if (!quantity.isEmpty() && !subTotal.isEmpty() && driveUnitSelect != null && driveUnitSelect.getUnitDriveValue() != null) {
-            DetailInvoice detailInvoice = new DetailInvoice(""+numDetail, item.getBarCode(), driveUnitSelect.getUnitDriveValueCode(), driveUnitSelect.getUnitDriveValue(), quantity, numberInvoice, item.getNameItem(), valueUnit, subTotal);
-            listDetailInvoice.add(detailInvoice);
-            detailInvoiceAdapter = new DetailInvoiceAdapter(getApplicationContext(), listDetailInvoice);
-            listDetailInvoiceView.setAdapter(detailInvoiceAdapter);
-            Toast.makeText(getApplicationContext(), "El artículo se agregó al detalle", Toast.LENGTH_SHORT).show();
-            numDetail++;
-            calcTotalInvoice(item.getBarCode(), subTotal, dialog);
+            int quantityNumber = Integer.parseInt(quantity);
+            int driverUnit = Integer.parseInt(driveUnitSelect.getUnitDriveValue());
+            int totalUnits = quantityNumber * driverUnit;
+            int stockExists = Integer.parseInt(item.getStock());
+            if(totalUnits > stockExists){
+                MyToastMessage.error(InvoiceActivity.this, "No existe stock suficiente para el artículo");
+            }else {
+                calcTotalInvoice(item.getBarCode(), subTotal, dialog, quantity, valueUnit, numberInvoice);
+            }
         } else {
-            Toast.makeText(getApplicationContext(), "Ingrese todos los campos requeridos", Toast.LENGTH_SHORT).show();
+            MyToastMessage.error(InvoiceActivity.this, "Ingrese todos los campos requeridos");
         }
     }
 
-    private void calcTotalInvoice(String barCode, final String subTotal, final AlertDialog dialog){
+    /**
+     * Method for calc the total of invoice
+     * @param barCode The bar code
+     * @param subTotal The subtotal for item
+     * @param dialog The dialog to close
+     */
+    private void calcTotalInvoice(String barCode, final String subTotal, final AlertDialog dialog, final String quantity, final String valueUnit, final String numberInvoice){
         taxProvider.getTax(barCode, "1").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                String existsTax = "false";
+                if(snapshot.exists()){
+                    existsTax = "true";
+                }
+                DetailInvoice detailInvoice = new DetailInvoice("" + numDetail, item.getBarCode(), driveUnitSelect.getUnitDriveValueCode(), driveUnitSelect.getUnitDriveValue(), quantity, numberInvoice, item.getNameItem(), valueUnit, subTotal, existsTax);
+                listDetailInvoice.add(detailInvoice);
+                detailInvoiceAdapter = new DetailInvoiceAdapter(getApplicationContext(), listDetailInvoice);
+                listDetailInvoiceView.setAdapter(detailInvoiceAdapter);
+                numDetail++;
+
                 double subTotalItem = Double.parseDouble(subTotal);
                 double subTotalFac = Double.parseDouble(lblSubTotalFac.getText().toString());
                 double totalSinIva = Double.parseDouble(lblTotalNotTaxFac.getText().toString());
@@ -577,7 +624,7 @@ public class InvoiceActivity extends AppCompatActivity{
                 subTotalFac = subTotalFac + subTotalItem;
                 if(snapshot.exists()){
                     totalConIva = totalConIva + subTotalItem;
-                    totalIva = totalIva + (subTotalItem * 0.12);
+                    totalIva = totalIva + (subTotalItem * Double.parseDouble(snapshot.child("valueTax").getValue().toString()) / 100);
                 }else{
                     totalSinIva = totalSinIva + subTotalItem;
                 }
@@ -587,6 +634,7 @@ public class InvoiceActivity extends AppCompatActivity{
                 lblTotalTaxFac.setText(ValidationUtil.getTwoDecimal(totalConIva));
                 lblTaxFac.setText(ValidationUtil.getTwoDecimal(totalIva));
                 lblTotalFac.setText(ValidationUtil.getTwoDecimal(totalFac));
+                MyToastMessage.info(InvoiceActivity.this, "El artículo se agregó al detalle");
                 dialog.dismiss();
             }
 
@@ -606,67 +654,81 @@ public class InvoiceActivity extends AppCompatActivity{
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if(item.getItemId() == R.id.saveItem){
-            // Guardar datos factura e imprimir
-            String typeDocument = "";
-            if(radioInvoice.isChecked()){
-                typeDocument = (String)radioInvoice.getText();
-            }
-            if(radioNoteSale.isChecked()){
-                typeDocument = (String)radioNoteSale.getText();
-            }
-            String numberInvoice = txtNumberInvoice.getText().toString();
-            String invoiceDate = txInvoiceDate.getText().toString();
-            String invoiceClient = txtInvoiceClient.getText().toString();
-            String subTotalFac = lblSubTotalFac.getText().toString();
-            String totalNotTaxFac = lblTotalNotTaxFac.getText().toString();
-            String totalTaxFac = lblTotalTaxFac.getText().toString();
-            String taxFac = lblTaxFac.getText().toString();
-            String totalFac = lblTotalFac.getText().toString();
-            String payOut = ""+chkPayOut.isChecked();
+            if(editInvoice) {
+                mDialog.show();
+                String typeDocument = "";
+                if (radioInvoice.isChecked()) {
+                    typeDocument = (String) radioInvoice.getText();
+                }
+                if (radioNoteSale.isChecked()) {
+                    typeDocument = (String) radioNoteSale.getText();
+                }
+                String numberInvoice = txtNumberInvoice.getText().toString();
+                String invoiceDate = txInvoiceDate.getText().toString();
+                String invoiceClient = txtInvoiceClient.getText().toString();
+                String subTotalFac = lblSubTotalFac.getText().toString();
+                String totalNotTaxFac = lblTotalNotTaxFac.getText().toString();
+                String totalTaxFac = lblTotalTaxFac.getText().toString();
+                String taxFac = lblTaxFac.getText().toString();
+                String totalFac = lblTotalFac.getText().toString();
+                String payOut = "" + chkPayOut.isChecked();
 
-            if(!typeDocument.isEmpty() && !numberInvoice.isEmpty() && !invoiceDate.isEmpty() && !invoiceClient.isEmpty()){
-                if(listDetailInvoice.size() > 0) {
-                    headerInvoice.setNumberDocument(numberInvoice);
-                    headerInvoice.setDateDocument(invoiceDate);
-                    headerInvoice.setPaidOut(payOut);
-                    headerInvoice.setValueDocumentCode(typeDocument);
-                    headerInvoice.setTypeDocumentCode("8");
-                    headerInvoice.setClientDocument(clientSearch.getDocument());
-                    headerInvoice.setClientName(invoiceClient);
-                    headerInvoice.setClientDirection(clientSearch.getAddress());
-                    headerInvoice.setClientPhone(clientSearch.getTelephone());
-                    headerInvoice.setTotalInvoice(totalFac);
-                    headerInvoice.setSubTotal(subTotalFac);
-                    headerInvoice.setTotalIva(taxFac);
-                    headerInvoice.setTotalTax(totalTaxFac);
-                    headerInvoice.setTotalNotTax(totalNotTaxFac);
-                    createHeaderInvoice(headerInvoice);
-                }else{
-                    Toast.makeText(InvoiceActivity.this, "Ingrese detalles al comprobante", Toast.LENGTH_SHORT).show();
+                if (!typeDocument.isEmpty() && !numberInvoice.isEmpty() && !invoiceDate.isEmpty() && !invoiceClient.isEmpty()) {
+                    if (listDetailInvoice.size() > 0) {
+                        headerInvoice.setNumberDocument(numberInvoice);
+                        headerInvoice.setDateDocument(invoiceDate);
+                        headerInvoice.setPaidOut(payOut);
+                        headerInvoice.setValueDocumentCode(typeDocument);
+                        headerInvoice.setTypeDocumentCode("8");
+                        headerInvoice.setClientDocument(clientSearch.getDocument());
+                        headerInvoice.setClientName(invoiceClient);
+                        headerInvoice.setClientDirection(clientSearch.getAddress());
+                        headerInvoice.setClientPhone(clientSearch.getTelephone());
+                        headerInvoice.setTotalInvoice(totalFac);
+                        headerInvoice.setSubTotal(subTotalFac);
+                        headerInvoice.setTotalIva(taxFac);
+                        headerInvoice.setTotalTax(totalTaxFac);
+                        headerInvoice.setTotalNotTax(totalNotTaxFac);
+                        createHeaderInvoice(headerInvoice);
+                    } else {
+                        MyToastMessage.error(this, "Ingrese detalles al comprobante");
+                        mDialog.dismiss();
+                    }
+                } else {
+                    MyToastMessage.error(this, "Ingrese todos los campos del comprobante");
+                    mDialog.dismiss();
                 }
             }else{
-                Toast.makeText(InvoiceActivity.this, "Ingrese todos los campos del comprobante", Toast.LENGTH_SHORT).show();
+                MyToastMessage.info(this, "La factura ya se encuentra guardada");
+                mDialog.dismiss();
             }
         }
-        if(item.getItemId() == R.id.printPdf){
+        /*if(item.getItemId() == R.id.printPdf){
             PrintManager printManager = (PrintManager)this.getSystemService(Context.PRINT_SERVICE);
             String jobName = this.getString(R.string.app_name)+" Document";
             printManager.print(jobName, new InvoicePrintDocumentAdapter(this, headerInvoice),null);
-        }
+        }*/
 
+        // Menu for print invoice
         if(item.getItemId() == R.id.printInvoice){
             try {
-                printData();
-                //disconnect();
+                if(printActive) {
+                    mDialog.show();
+                    printData();
+                }else{
+                    MyToastMessage.error(this, "Primero se debe facturar para volver a imprimir una factura");
+                }
             }catch (Exception e){
                 e.printStackTrace();
             }
         }
-
-
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Method for create and save the invoice
+     * @param invoice The data header of the invoice
+     */
     void createHeaderInvoice(final HeaderInvoice invoice) {
         invoiceProvider.createHeaderInvoice(invoice).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
@@ -674,25 +736,66 @@ public class InvoiceActivity extends AppCompatActivity{
                 if (task.isSuccessful()) {
                     createDetailInvoice(invoice.getNumberDocument(), listDetailInvoice);
                 } else {
-                    Toast.makeText(InvoiceActivity.this, "No se pudo crear el comprobante", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.error(InvoiceActivity.this, "No se pudo crear el comprobante");
                     mDialog.hide();
                 }
             }
         });
     }
 
-    void createDetailInvoice(String numberDocument, List<DetailInvoice> detailsInvoice) {
+    /**
+     * Method for create and save the details of invoice
+     * @param numberDocument The number of document of invoice
+     * @param detailsInvoice The list of details to save
+     */
+    void createDetailInvoice(String numberDocument, final List<DetailInvoice> detailsInvoice) {
         invoiceProvider.createDetailsInvoice(numberDocument, detailsInvoice).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
-                    Toast.makeText(InvoiceActivity.this, "El comprobante se creó correctamente", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.susses(InvoiceActivity.this, "El comprobante se creó correctamente");
+                    try {
+                        printActive = true;
+                        updateStockItem(detailsInvoice);
+                        //printData();
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
                 } else {
-                    Toast.makeText(InvoiceActivity.this, "No se pudo crear el comprobante", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.error(InvoiceActivity.this, "No se pudo crear el comprobante");
                 }
-                mDialog.hide();
+                mDialog.dismiss();
             }
         });
+    }
+
+    /**
+     * Method for create and save the details of invoice
+     * @param detailsInvoice The list of details to save
+     */
+    void updateStockItem(List<DetailInvoice> detailsInvoice) {
+        for (final DetailInvoice detailInvoice: detailsInvoice){
+            int stockExists = 0;
+            for(Item itemTemp : listItems){
+                if(itemTemp.getBarCode().equals(detailInvoice.getBarCodeItem())){
+                    stockExists = Integer.parseInt(itemTemp.getStock());
+                    break;
+                }
+            }
+            int quantityOrder = Integer.parseInt(detailInvoice.getQuantity());
+            int valueDriverOrder = Integer.parseInt(detailInvoice.getValueDriverUnit());
+            int newStock = stockExists - (quantityOrder * valueDriverOrder);
+            itemProvider.updateStockItem(detailInvoice.getBarCodeItem(), String.valueOf(newStock)).addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()) {
+                        mDialog.dismiss();
+                    } else {
+                        MyToastMessage.error(InvoiceActivity.this, "Error al actualizar stock del artículo");
+                    }
+                }
+            });
+        }
     }
 
     /**
@@ -718,6 +821,7 @@ public class InvoiceActivity extends AppCompatActivity{
                                     detailInvoice.setQuantity(snapshot.child("quantity").getValue().toString());
                                     detailInvoice.setSubTotal(snapshot.child("subTotal").getValue().toString());
                                     detailInvoice.setUnitValue(snapshot.child("unitValue").getValue().toString());
+                                    detailInvoice.setExistsTax(snapshot.child("existsTax").getValue() != null ? snapshot.child("existsTax").getValue().toString() : null);
                                     detailInvoice.setValueCatalogDriverUnit(snapshot.child("valueCatalogDriverUnit").getValue().toString());
                                     detailInvoice.setValueDriverUnit(snapshot.child("valueDriverUnit").getValue().toString());
                                     listDetailInvoice.add(detailInvoice);
@@ -745,6 +849,16 @@ public class InvoiceActivity extends AppCompatActivity{
         });
     }
 
+    @Override
+    public void onBackPressed() {
+        try {
+            disconnect();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        super.onBackPressed();
+    }
+
     /**
      * Methods for printed invoices
      */
@@ -752,7 +866,7 @@ public class InvoiceActivity extends AppCompatActivity{
         try {
             bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             if(bluetoothAdapter == null){
-                Toast.makeText(InvoiceActivity.this, "No existen dispositivos para imprimir", Toast.LENGTH_SHORT).show();
+                MyToastMessage.warn(InvoiceActivity.this, "No existen dispositivos para imprimir");
             }
             if(bluetoothAdapter.isEnabled())
             {
@@ -837,26 +951,27 @@ public class InvoiceActivity extends AppCompatActivity{
     void printData()throws IOException{
         try {
             StringBuffer textPrint = new StringBuffer();
-            textPrint.append("\n");
-            textPrint.append("******** LOS NEVADOS **********");
-            textPrint.append("\n");
-            textPrint.append("\n");
-            textPrint.append("MATRIZ:CALLE SUBIDA AL ARCANGEL");
+            textPrint.append(ValidationUtil.completeSpaceTwoWay(31, enterprise.getName(), "*"));
             textPrint.append("\n");
             textPrint.append("\n");
-            textPrint.append("IBARRA - ECUADOR    TEL:2605103");
-            textPrint.append("\n");
-            textPrint.append("RUC NRO: 1002966404001");
+            textPrint.append("MATRIZ: ").append(enterprise.getAddress());
             textPrint.append("\n");
             textPrint.append("\n");
-            textPrint.append("            -- * --            ");
+            textPrint.append("TELEFONO: ").append(enterprise.getTelephone());
+            textPrint.append("\n");
+            textPrint.append("RUC NRO: ").append(enterprise.getRuc());
+            textPrint.append("\n");
+            textPrint.append(ValidationUtil.completeSpaceTwoWay(31, enterprise.getCity()+" - "+enterprise.getCountry(), " "));
+            textPrint.append("\n");
+            textPrint.append("        ------ * ------        ");
+            textPrint.append("\n");
             textPrint.append("\n");
             textPrint.append("\n");
             textPrint.append("DOCUMENTO NRO:"+ValidationUtil.completeSpaceString(17, txtNumberInvoice.getText().toString()));
             textPrint.append("\n");
             textPrint.append("CLIENTE:"+ValidationUtil.completeSpaceString(23, txtInvoiceClient.getText().toString()));
             textPrint.append("\n");
-            textPrint.append("CED/RUC:"+ValidationUtil.completeSpaceString(13, txtNumberInvoice.getText().toString()));
+            textPrint.append("CED/RUC:"+ValidationUtil.completeSpaceString(13, clientSearch.getDocument()));
             textPrint.append("\n");
             textPrint.append("FECHA:"+txInvoiceDate.getText().toString());
             textPrint.append("\n");
@@ -868,16 +983,66 @@ public class InvoiceActivity extends AppCompatActivity{
             textPrint.append("\n");
             textPrint.append("-------------------------------");
             textPrint.append("\n");
+            for (DetailInvoice detail : listDetailInvoice){
+                textPrint.append(ValidationUtil.completeSpaceString(4, detail.getQuantity()));
+                textPrint.append(" "+ValidationUtil.completeSpaceString(12, detail.getDescription()));
+                textPrint.append(ValidationUtil.completeSpaceNumber(6, detail.getUnitValue()));
+                textPrint.append(ValidationUtil.completeSpaceNumber(8, detail.getSubTotal()));
+                if(detail.getExistsTax() != null && detail.getExistsTax().equals("true")){
+                    textPrint.append("I");
+                }else{
+                    textPrint.append(" ");
+                }
+                textPrint.append("\n");
+            }
+            textPrint.append("-------------------------------");
+            textPrint.append("\n");
+            textPrint.append(ValidationUtil.completeSpaceNumber(21, "Sub total: "));
+            textPrint.append(ValidationUtil.completeSpaceNumber(10, lblSubTotalFac.getText().toString()));
+            textPrint.append("\n");
+            textPrint.append(ValidationUtil.completeSpaceNumber(21, "Tarifa 0%: "));
+            textPrint.append(ValidationUtil.completeSpaceNumber(10, lblTotalNotTaxFac.getText().toString()));
+            textPrint.append("\n");
+            textPrint.append(ValidationUtil.completeSpaceNumber(21, "Tarifa 12%:"));
+            textPrint.append(ValidationUtil.completeSpaceNumber(10, lblTotalTaxFac.getText().toString()));
+            textPrint.append("\n");
+            textPrint.append(ValidationUtil.completeSpaceNumber(21, "IVA 12%:   "));
+            textPrint.append(ValidationUtil.completeSpaceNumber(10, lblTaxFac.getText().toString()));
+            textPrint.append("\n");
+            textPrint.append(ValidationUtil.completeSpaceNumber(21, "Total:     "));
+            textPrint.append(ValidationUtil.completeSpaceNumber(10, lblTotalFac.getText().toString()));
+            textPrint.append("\n");
+            textPrint.append("\n");
+            textPrint.append("\n");
+            textPrint.append("\n");
+            textPrint.append("-------------------------------");
+            textPrint.append("\n");
+            textPrint.append("PARA RECLAMOS Y DEVOLUCIONES");
+            textPrint.append("\n");
+            textPrint.append("PRESENTAR ESTE DOCUMENTO");
+            textPrint.append("\n");
+            textPrint.append("-------------------------------");
+            textPrint.append("\n");
+            textPrint.append("  ** GRACIAS POR SU COMPRA **  ");
+            textPrint.append("\n");
+            textPrint.append("-------------------------------");
+            textPrint.append("\n");
             textPrint.append("\n");
             textPrint.append("\n");
             textPrint.append("\n");
 
             outputStream.write(textPrint.toString().getBytes());
+            mDialog.dismiss();
         }catch (Exception e){
             e.printStackTrace();
+            mDialog.dismiss();
         }
     }
 
+    /**
+     * Method for disconnect the printer
+     * @throws IOException The exception to execute disconnected
+     */
     void disconnect() throws IOException{
         try {
             stopWorker = true;
@@ -887,5 +1052,45 @@ public class InvoiceActivity extends AppCompatActivity{
         }catch (Exception e){
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Method for load the data of the enterprise for print in the invoice
+     */
+    void loadDataEnterprise(){
+        mDialog.show();
+        enterpriseProvider.getListEnterprise().addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    final DataSnapshot enterpriseNode = snapshot.getChildren().iterator().next();
+                    enterpriseProvider.getEnterprise(enterpriseNode.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            if(snapshot.exists()){
+                                enterprise = new Enterprise();
+                                enterprise.setRuc(snapshot.child("ruc").getValue().toString());
+                                enterprise.setName(snapshot.child("name").getValue().toString());
+                                enterprise.setAddress(snapshot.child("address").getValue().toString());
+                                enterprise.setTelephone(snapshot.child("telephone").getValue().toString());
+                                enterprise.setCountry(snapshot.child("country").getValue().toString());
+                                enterprise.setCity(snapshot.child("city").getValue().toString());
+                            }
+                            mDialog.dismiss();
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                        }
+                    });
+                } else {
+                    MyToastMessage.warn(InvoiceActivity.this, "Para poder imprimir debe ingresar los datos de la empresa");
+                    mDialog.dismiss();
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+            }
+        });
     }
 }

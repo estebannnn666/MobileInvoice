@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import android.view.LayoutInflater;
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 
 import dmax.dialog.SpotsDialog;
 import ec.com.innovatech.mobileinvoice.R;
+import ec.com.innovatech.mobileinvoice.includes.MyToastMessage;
 import ec.com.innovatech.mobileinvoice.models.Tax;
 import ec.com.innovatech.mobileinvoice.providers.TaxProvider;
 
@@ -78,7 +80,7 @@ public class TaxFragment extends Fragment {
                 if(!idTax.isEmpty()) {
                     viewDialogTax();
                 }else{
-                    Toast.makeText(getContext(), "Primero debe guardar datos del artículo", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.warn((AppCompatActivity) getActivity(), "Primero debe guardar datos del artículo");
                 }
             }
         });
@@ -96,7 +98,7 @@ public class TaxFragment extends Fragment {
                         cont++;
                     }
                 }else{
-                    Toast.makeText(getContext(), "No existen impuestos para guardar", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.info((AppCompatActivity) getActivity(), "No existen impuestos para guardar");
                 }
             }
         });
@@ -109,7 +111,7 @@ public class TaxFragment extends Fragment {
                 if(taxDelete.getId() != null) {
                     delete(barcodeTax, taxDelete);
                 }else {
-                    Toast.makeText(getActivity(), "Los datos se eliminarion correctamente", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.susses((AppCompatActivity) getActivity(), "Los datos se eliminarion correctamente");
                 }
                 listTaxes.remove(taxDelete);
                 taxAdapter = new TaxAdapter(getContext(), listTaxes);
@@ -133,12 +135,12 @@ public class TaxFragment extends Fragment {
                 txtNameTax.setText("");
                 txtDescriptionTax.setText("");
                 txtValueTax.setText("");
-                Toast.makeText(getContext(), "EL impuesto agregado a la lista", Toast.LENGTH_SHORT).show();
+                MyToastMessage.info((AppCompatActivity) getActivity(), "EL impuesto agregado a la lista");
             } else {
-                Toast.makeText(getContext(), "Ingrese todos los campos requeridos", Toast.LENGTH_SHORT).show();
+                MyToastMessage.error((AppCompatActivity) getActivity(), "Ingrese todos los campos requeridos");
             }
         }else{
-            Toast.makeText(getContext(), "Primero debe guardar datos del artículo", Toast.LENGTH_SHORT).show();
+            MyToastMessage.warn((AppCompatActivity) getActivity(), "Primero debe guardar datos del artículo");
         }
         mDialog.dismiss();
     }
@@ -149,9 +151,9 @@ public class TaxFragment extends Fragment {
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
                     mDialog.dismiss();
-                    Toast.makeText(getActivity(), "Los datos se guardaron correctamente", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.susses((AppCompatActivity) getActivity(), "Los datos se guardaron correctamente");
                 } else {
-                    Toast.makeText(getActivity(), "Error al guardar los datos", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.error((AppCompatActivity) getActivity(), "Error al guardar los datos");
                 }
             }
         });
@@ -163,9 +165,9 @@ public class TaxFragment extends Fragment {
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
                     mDialog.dismiss();
-                    Toast.makeText(getActivity(), "Los datos se eliminarion correctamente", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.susses((AppCompatActivity) getActivity(), "Los datos se eliminarion correctamente");
                 } else {
-                    Toast.makeText(getActivity(), "Error al eliminar los datos", Toast.LENGTH_SHORT).show();
+                    MyToastMessage.error((AppCompatActivity) getActivity(), "Error al eliminar los datos");
                 }
             }
         });
@@ -225,6 +227,12 @@ public class TaxFragment extends Fragment {
         txtNameTax = view.findViewById(R.id.txtNameTax);
         txtDescriptionTax = view.findViewById(R.id.txtDescriptionTax);
         txtValueTax = view.findViewById(R.id.txtPercentageTax);
+        txtNameTax.setText("IVA");
+        txtNameTax.setEnabled(false);
+        txtDescriptionTax.setText("Impuesto al valor agregado");
+        txtDescriptionTax.setEnabled(false);
+        txtValueTax.setText("12");
+        txtValueTax.setEnabled(false);
 
         btnAddTax.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -10,10 +10,11 @@ public class DetailInvoice {
     private String description ;
     private String unitValue ;
     private String subTotal ;
+    private String existsTax ;
 
     public DetailInvoice(){
     }
-    public DetailInvoice(String id, String barCodeItem, String valueCatalogDriverUnit, String valueDriverUnit, String quantity, String numberDocument, String description, String unitValue, String subTotal){
+    public DetailInvoice(String id, String barCodeItem, String valueCatalogDriverUnit, String valueDriverUnit, String quantity, String numberDocument, String description, String unitValue, String subTotal, String existsTax){
         this.id = id;
         this.barCodeItem = barCodeItem;
         this.valueCatalogDriverUnit = valueCatalogDriverUnit;
@@ -23,6 +24,7 @@ public class DetailInvoice {
         this.description = description;
         this.unitValue = unitValue;
         this.subTotal = subTotal;
+        this.existsTax = existsTax;
     }
 
     public String getId() {
@@ -95,5 +97,13 @@ public class DetailInvoice {
 
     public void setSubTotal(String subTotal) {
         this.subTotal = subTotal;
+    }
+
+    public String getExistsTax() {
+        return existsTax;
+    }
+
+    public void setExistsTax(String existsTax) {
+        this.existsTax = existsTax;
     }
 }

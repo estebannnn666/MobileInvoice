@@ -5,4 +5,9 @@
     <color name="colorAccent">#03DAC5</color>
     <color name="colorWhite">#FFFFFF</color>
     <color name="colorBlueLight">#03A9F4</color>
+
+    <color name="colorToastInfo">#2F96B4</color>
+    <color name="colorToastWarn">#E6D143</color>
+    <color name="colorToastError">#D24D57</color>
+    <color name="colorToastSusses">#4DAF7C</color>
 </resources>
