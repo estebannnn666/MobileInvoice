@@ -1,19 +1,18 @@
-package ec.com.innovatech.mobileinvoice.invoices;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SearchView;
+package ec.com.innovatech.mobileinvoice.orders;
 
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -28,17 +27,17 @@ import java.util.Date;
 import dmax.dialog.SpotsDialog;
 import ec.com.innovatech.mobileinvoice.R;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
-import ec.com.innovatech.mobileinvoice.models.HeaderInvoice;
-import ec.com.innovatech.mobileinvoice.providers.InvoiceProvider;
+import ec.com.innovatech.mobileinvoice.models.HeaderOrder;
+import ec.com.innovatech.mobileinvoice.providers.OrderProvider;
 import ec.com.innovatech.mobileinvoice.util.ValidationUtil;
 
-public class ListInvoiceActivity extends AppCompatActivity {
+public class ListOrderActivity extends AppCompatActivity {
 
     AlertDialog mDialog;
     ListView listView;
-    HeaderInvoiceAdapter headerInvoiceAdapter;
-    ArrayList<HeaderInvoice> headerInvoices;
-    InvoiceProvider invoiceProvider;
+    HeaderOrderAdapter headerOrderAdapter;
+    ArrayList<HeaderOrder> headerOrders;
+    OrderProvider orderProvider;
     TextView lblListEmpty;
     TextView lblTotalAccounts;
     TextView lblNumberDocuments;
@@ -48,63 +47,63 @@ public class ListInvoiceActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_list_invoice);
-        MyToolBar.show(this,"Facturas", true);
-        mDialog = new SpotsDialog.Builder().setContext(ListInvoiceActivity.this).setMessage("Espere un momento").build();
-        listView = findViewById(R.id.listInvoice);
-        lblListEmpty =  findViewById(R.id.txtInvoiceListEmpty);
-        lblTotalAccounts = findViewById(R.id.lblTotalAccounts);
-        lblNumberDocuments = findViewById(R.id.lblNumberDocuments);
-        invoiceProvider = new InvoiceProvider();
-        headerInvoices = new ArrayList<>();
-        loadDataInvoices();
+        setContentView(R.layout.activity_list_order);
+
+        MyToolBar.show(this,"Pedidos", true);
+        mDialog = new SpotsDialog.Builder().setContext(ListOrderActivity.this).setMessage("Espere un momento").build();
+        listView = findViewById(R.id.listOrders);
+        lblListEmpty =  findViewById(R.id.txtOrderListEmpty);
+        lblTotalAccounts = findViewById(R.id.lblTotalOrder);
+        lblNumberDocuments = findViewById(R.id.lblNumberOrder);
+        orderProvider = new OrderProvider();
+        headerOrders = new ArrayList<>();
+        loadDataOrders();
         totalValue = 0;
         totalDocuments = 0;
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(ListInvoiceActivity.this, InvoiceActivity.class);
-                intent.putExtra("INVOICE_SELECT", headerInvoices.get(position));
+                Intent intent = new Intent(ListOrderActivity.this, OrderActivity.class);
+                intent.putExtra("ORDER_SELECT", headerOrders.get(position));
                 startActivity(intent);
             }
         });
     }
 
-    public void loadDataInvoices(){
+    public void loadDataOrders(){
         mDialog.show();
-        invoiceProvider.getListInvoices().addListenerForSingleValueEvent(new ValueEventListener() {
+        orderProvider.getListOrder().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                String totalFormat = ValidationUtil.getTwoDecimal(totalValue);
+                lblTotalAccounts.setText(totalFormat);
+                lblNumberDocuments.setText(""+totalDocuments);
                 if(snapshot.exists()){
                     lblListEmpty.setText("");
-                    String totalFormat = ValidationUtil.getTwoDecimal(totalValue);
-                    lblTotalAccounts.setText(totalFormat);
-                    lblNumberDocuments.setText(""+totalDocuments);
                     for (final DataSnapshot invoiceNode: snapshot.getChildren()){
-                        invoiceProvider.getInvoice(invoiceNode.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
+                        orderProvider.getOrder(invoiceNode.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot snapshot) {
                                 if(snapshot.exists()){
-                                    HeaderInvoice headerInvoice = new HeaderInvoice();
-                                    headerInvoice.setTypeDocumentCode(snapshot.child("typeDocumentCode").getValue().toString());
-                                    headerInvoice.setTotalNotTax(snapshot.child("totalNotTax").getValue().toString());
-                                    headerInvoice.setTotalTax(snapshot.child("totalTax").getValue().toString());
-                                    headerInvoice.setTotalIva(snapshot.child("totalIva").getValue().toString());
-                                    headerInvoice.setSubTotal(snapshot.child("subTotal").getValue().toString());
-                                    headerInvoice.setTotalInvoice(snapshot.child("totalInvoice").getValue().toString());
-                                    headerInvoice.setPaidOut(snapshot.child("paidOut").getValue().toString());
-                                    headerInvoice.setDateDocument(snapshot.child("dateDocument").getValue().toString());
-                                    headerInvoice.setNumberDocument(snapshot.child("numberDocument").getValue().toString());
-                                    headerInvoice.setClientPhone(snapshot.child("clientPhone").getValue().toString());
-                                    headerInvoice.setClientDirection(snapshot.child("clientDirection").getValue().toString());
-                                    headerInvoice.setClientName(snapshot.child("clientName").getValue().toString());
-                                    headerInvoice.setClientDocument(snapshot.child("clientDocument").getValue().toString());
-                                    headerInvoice.setValueDocumentCode(snapshot.child("valueDocumentCode").getValue().toString());
-                                    headerInvoices.add(headerInvoice);
-                                    headerInvoiceAdapter = new HeaderInvoiceAdapter(getBaseContext(), headerInvoices);
-                                    listView.setAdapter(headerInvoiceAdapter);
-                                    addTotalInvoiceSaleDay(headerInvoice.getDateDocument(), headerInvoice.getTotalInvoice());
+                                    HeaderOrder headerOrder = new HeaderOrder();
+                                    headerOrder.setIdOrder(snapshot.child("idOrder").getValue().toString());
+                                    headerOrder.setTotalNotTax(snapshot.child("totalNotTax").getValue().toString());
+                                    headerOrder.setTotalTax(snapshot.child("totalTax").getValue().toString());
+                                    headerOrder.setTotalIva(snapshot.child("totalIva").getValue().toString());
+                                    headerOrder.setSubTotal(snapshot.child("subTotal").getValue().toString());
+                                    headerOrder.setTotalInvoice(snapshot.child("totalInvoice").getValue().toString());
+                                    headerOrder.setOrderDate(snapshot.child("orderDate").getValue().toString());
+                                    headerOrder.setDeliveryDate(snapshot.child("deliveryDate").getValue().toString());
+                                    headerOrder.setClientPhone(snapshot.child("clientPhone").getValue().toString());
+                                    headerOrder.setClientDirection(snapshot.child("clientDirection").getValue().toString());
+                                    headerOrder.setClientName(snapshot.child("clientName").getValue().toString());
+                                    headerOrder.setClientDocument(snapshot.child("clientDocument").getValue().toString());
+                                    headerOrder.setStatusOrder(snapshot.child("statusOrder").getValue().toString());
+                                    headerOrders.add(headerOrder);
+                                    headerOrderAdapter = new HeaderOrderAdapter(getBaseContext(), headerOrders);
+                                    listView.setAdapter(headerOrderAdapter);
+                                    addTotalInvoiceSaleDay(headerOrder.getOrderDate(), headerOrder.getTotalInvoice());
                                 }
                                 mDialog.dismiss();
                             }
@@ -115,7 +114,7 @@ public class ListInvoiceActivity extends AppCompatActivity {
                         });
                     }
                 }else{
-                    lblListEmpty.setText("No existen facturas ingresadas");
+                    lblListEmpty.setText("No existen pedidos ingresados");
                     mDialog.dismiss();
                 }
             }
@@ -161,10 +160,10 @@ public class ListInvoiceActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.invoice_menu, menu);
-        MenuItem menuItem = menu.findItem(R.id.searchInvoice);
+        getMenuInflater().inflate(R.menu.order_menu, menu);
+        MenuItem menuItem = menu.findItem(R.id.searchOrder);
         SearchView searchView = (SearchView)menuItem.getActionView();
-        searchView.setQueryHint("Buscar por CED/RUC");
+        searchView.setQueryHint("Buscar por cliente");
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -173,7 +172,7 @@ public class ListInvoiceActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                headerInvoiceAdapter.getFilter().filter(newText);
+                headerOrderAdapter.getFilter().filter(newText);
                 return true;
             }
         });
@@ -182,8 +181,8 @@ public class ListInvoiceActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if(item.getItemId() == R.id.newInvoice){
-            Intent intent = new Intent(ListInvoiceActivity.this, InvoiceActivity.class);
+        if(item.getItemId() == R.id.newOrder){
+            Intent intent = new Intent(ListOrderActivity.this, OrderActivity.class);
             startActivity(intent);
         }
         return super.onOptionsItemSelected(item);

@@ -34,7 +34,7 @@ public class ListChargesActivity extends AppCompatActivity {
 
     AlertDialog mDialog;
     ListView listView;
-    HeaderInvoiceAdapter headerInvoiceAdapter;
+    InvoiceAdapter invoiceAdapter;
     ArrayList<HeaderInvoice> headerInvoices;
     InvoiceProvider invoiceProvider;
     TextView lblListEmpty;
@@ -99,8 +99,8 @@ public class ListChargesActivity extends AppCompatActivity {
                                         headerInvoice.setClientDocument(snapshot.child("clientDocument").getValue().toString());
                                         headerInvoice.setValueDocumentCode(snapshot.child("valueDocumentCode").getValue().toString());
                                         headerInvoices.add(headerInvoice);
-                                        headerInvoiceAdapter = new HeaderInvoiceAdapter(getBaseContext(), headerInvoices);
-                                        listView.setAdapter(headerInvoiceAdapter);
+                                        invoiceAdapter = new InvoiceAdapter(getBaseContext(), headerInvoices);
+                                        listView.setAdapter(invoiceAdapter);
                                         totalValue = totalValue + Double.parseDouble(headerInvoice.getTotalInvoice());
                                         totalDocuments++;
                                         String totalFormat = ValidationUtil.getTwoDecimal(totalValue);
@@ -144,7 +144,7 @@ public class ListChargesActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                headerInvoiceAdapter.getFilter().filter(newText);
+                invoiceAdapter.getFilter().filter(newText);
                 return true;
             }
         });

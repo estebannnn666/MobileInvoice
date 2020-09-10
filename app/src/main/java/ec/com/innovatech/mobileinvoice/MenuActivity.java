@@ -17,6 +17,7 @@ import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
 import ec.com.innovatech.mobileinvoice.invoices.InvoiceActivity;
 import ec.com.innovatech.mobileinvoice.invoices.ListInvoiceActivity;
 import ec.com.innovatech.mobileinvoice.items.ListItemActivity;
+import ec.com.innovatech.mobileinvoice.orders.ListOrderActivity;
 import ec.com.innovatech.mobileinvoice.providers.AuthProviders;
 
 public class MenuActivity extends AppCompatActivity {
@@ -27,6 +28,7 @@ public class MenuActivity extends AppCompatActivity {
     ImageView invoiceMenu;
     ImageView accounts;
     ImageView configuration;
+    ImageView preSale;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +41,7 @@ public class MenuActivity extends AppCompatActivity {
         invoiceMenu = findViewById(R.id.imgInvoices);
         accounts = findViewById(R.id.imgAccounts);
         configuration = findViewById(R.id.imgConfiguration);
+        preSale = findViewById(R.id.imgPreSale);
 
 
         // Go to page if clients
@@ -82,6 +85,15 @@ public class MenuActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MenuActivity.this, EnterpriseActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        // Go to page if select configuration
+        preSale.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MenuActivity.this, ListOrderActivity.class);
                 startActivity(intent);
             }
         });
