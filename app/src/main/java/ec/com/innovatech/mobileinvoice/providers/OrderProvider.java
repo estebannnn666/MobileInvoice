@@ -23,7 +23,7 @@ public class OrderProvider {
         return mDataBase.child(headerOrder.getIdOrder()).child("Header").setValue(headerOrder);
     }
 
-    public Task<Void> createDetailsIOrder(String idOrder, List<DetailOrder> detailOrders){
+    public Task<Void> createDetailsOrder(String idOrder, List<DetailOrder> detailOrders){
         return mDataBase.child(idOrder).child("Details").setValue(detailOrders);
     }
 

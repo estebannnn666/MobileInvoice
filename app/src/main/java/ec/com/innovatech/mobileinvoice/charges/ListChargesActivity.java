@@ -132,8 +132,8 @@ public class ListChargesActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.invoice_menu, menu);
-        MenuItem menuItem = menu.findItem(R.id.searchInvoice);
+        getMenuInflater().inflate(R.menu.account_menu, menu);
+        MenuItem menuItem = menu.findItem(R.id.searchAccount);
         SearchView searchView = (SearchView)menuItem.getActionView();
         searchView.setQueryHint("Buscarque por CED/RUC");
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -149,14 +149,5 @@ public class ListChargesActivity extends AppCompatActivity {
             }
         });
         return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if(item.getItemId() == R.id.newInvoice){
-            Intent intent = new Intent(ListChargesActivity.this, InvoiceActivity.class);
-            startActivity(intent);
-        }
-        return super.onOptionsItemSelected(item);
     }
 }

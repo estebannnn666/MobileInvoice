@@ -5,7 +5,6 @@ import java.io.Serializable;
 public class HeaderOrder implements Serializable {
 
     private String idOrder ;
-    private String invoiceReferenceCode ;
     private String orderDate ;
     private String deliveryDate ;
     private String statusOrder ;
@@ -20,9 +19,8 @@ public class HeaderOrder implements Serializable {
     private String subTotal ;
     private String totalInvoice ;
 
-    public HeaderOrder(String numberDocument, String invoiceReferenceCode, String orderDate, String deliveryDate, String statusOrder, String clientDocument, String clientName, String clientDirection, String clientPhone, String discount, String totalNotTax, String totalTax, String totalIva, String subTotal, String totalInvoice){
+    public HeaderOrder(String numberDocument, String orderDate, String deliveryDate, String statusOrder, String clientDocument, String clientName, String clientDirection, String clientPhone, String discount, String totalNotTax, String totalTax, String totalIva, String subTotal, String totalInvoice){
         this.idOrder = numberDocument;
-        this.invoiceReferenceCode = invoiceReferenceCode;
         this.orderDate = orderDate;
         this.deliveryDate = deliveryDate;
         this.statusOrder = statusOrder;
@@ -47,14 +45,6 @@ public class HeaderOrder implements Serializable {
 
     public void setIdOrder(String idOrder) {
         this.idOrder = idOrder;
-    }
-
-    public String getInvoiceReferenceCode() {
-        return invoiceReferenceCode;
-    }
-
-    public void setInvoiceReferenceCode(String invoiceReferenceCode) {
-        this.invoiceReferenceCode = invoiceReferenceCode;
     }
 
     public String getOrderDate() {
