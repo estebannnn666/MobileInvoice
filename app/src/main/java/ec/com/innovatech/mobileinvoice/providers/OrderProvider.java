@@ -3,6 +3,7 @@ package ec.com.innovatech.mobileinvoice.providers;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 
 import java.util.List;
 
@@ -27,8 +28,16 @@ public class OrderProvider {
         return mDataBase.child(idOrder).child("Details").setValue(detailOrders);
     }
 
+    public Task<Void> updateStatusOrder(String idOrder, String statusOrder){
+        return mDataBase.child(idOrder).child("Header").child("statusOrder").setValue(statusOrder);
+    }
+
     public DatabaseReference getListOrder(){
         return mDataBase;
+    }
+
+    public Query getListOrderSorted(){
+        return mDataBase.orderByChild("Header/orderDate");
     }
 
     public DatabaseReference getOrder(String idOrder){
@@ -41,5 +50,9 @@ public class OrderProvider {
 
     public DatabaseReference getDetailOrder(String idOrder, String id){
         return mDataBase.child(idOrder).child("Details").child(id);
+    }
+
+    public Task<Void> deleteOrder(String idOrder){
+        return mDataBase.child(idOrder).removeValue();
     }
 }

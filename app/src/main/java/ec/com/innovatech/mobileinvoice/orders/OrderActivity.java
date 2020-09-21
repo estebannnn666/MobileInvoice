@@ -25,6 +25,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
@@ -49,6 +51,7 @@ import ec.com.innovatech.mobileinvoice.providers.DriverUnitProvider;
 import ec.com.innovatech.mobileinvoice.providers.EnterpriseProvider;
 import ec.com.innovatech.mobileinvoice.providers.ItemProvider;
 import ec.com.innovatech.mobileinvoice.providers.OrderProvider;
+import ec.com.innovatech.mobileinvoice.providers.SequenceProvider;
 import ec.com.innovatech.mobileinvoice.providers.TaxProvider;
 import ec.com.innovatech.mobileinvoice.util.ValidationUtil;
 
@@ -56,12 +59,13 @@ public class OrderActivity extends AppCompatActivity {
 
     SharedPreferences mPref;
     SharedPreferences.Editor editor;
+    FirebaseAuth fireAuth;
     AlertDialog mDialog;
     Button btnAddClient;
     Button btnOpenItems;
     EditText txtDeliveryDate;
     EditText txtOrderDate;
-    EditText txtInvoiceClient;
+    EditText txtOrderClient;
     TextView lblAddressDelivery;
     ListView listView;
     ArrayList<Item> listItems;
@@ -100,9 +104,15 @@ public class OrderActivity extends AppCompatActivity {
     ArrayList<DetailOrder> listDetailOrders;
     int numDetail;
     OrderProvider orderProvider;
+    SequenceProvider sequenceProvider;
     HeaderOrder headerOrder;
 
-    boolean editInvoice;
+    Button btnYesCancel;
+    Button btnNoCancel;
+    TextView lblTitleDialog;
+    TextView lblMessageDialog;
+
+    boolean editOrder;
 
 
     @Override
@@ -111,14 +121,14 @@ public class OrderActivity extends AppCompatActivity {
         setContentView(R.layout.activity_order);
         MyToolBar.show(this,"Nuevo pedido", true);
         mPref = getApplicationContext().getSharedPreferences("invoice", MODE_PRIVATE);
+        fireAuth = FirebaseAuth.getInstance();
         editor = mPref.edit();
-        MyToolBar.show(this,"Nueva venta", true);
         mDialog = new SpotsDialog.Builder().setContext(OrderActivity.this).setMessage("Espere un momento").build();
         btnAddClient = findViewById(R.id.btnAddClientOrder);
         txtOrderDate = findViewById(R.id.orderDate);
         txtDeliveryDate = findViewById(R.id.deliveryDate);
         lblAddressDelivery = findViewById(R.id.lblAddressDelivery);
-        txtInvoiceClient = findViewById(R.id.invoiceClient);
+        txtOrderClient = findViewById(R.id.orderClient);
         btnOpenItems = findViewById(R.id.btnDialogOrderItems);
         listDetailOrderView = findViewById(R.id.listDetailOrder);
         lblSubTotalFac = findViewById(R.id.lblSubTotalFac);
@@ -127,23 +137,26 @@ public class OrderActivity extends AppCompatActivity {
         lblTaxFac = findViewById(R.id.lblIvaFac);
         lblTotalFac = findViewById(R.id.lblTotalFac);
 
-        editInvoice = true;
+        editOrder = false;
         headerOrder = new HeaderOrder();
         listDetailOrders = new ArrayList<>();
 
         driverUnitProvider = new DriverUnitProvider();
         orderProvider = new OrderProvider();
         enterpriseProvider = new EnterpriseProvider();
+        sequenceProvider = new SequenceProvider();
 
         Bundle resourceBundle = getIntent().getExtras();
         if(resourceBundle != null) {
             HeaderOrder orderEdit = (HeaderOrder)resourceBundle.getSerializable("ORDER_SELECT");
             if(orderEdit != null) {
-                editInvoice = false;
+                headerOrder.setIdOrder(orderEdit.getIdOrder());
+                headerOrder.setStatusOrder(orderEdit.getStatusOrder());
+                editOrder = true;
                 txtDeliveryDate.setText(orderEdit.getDeliveryDate());
                 txtOrderDate.setText(orderEdit.getOrderDate());
                 lblAddressDelivery.setText(orderEdit.getClientDirection());
-                txtInvoiceClient.setText(orderEdit.getClientName());
+                txtOrderClient.setText(orderEdit.getClientName());
                 lblSubTotalFac.setText(orderEdit.getSubTotal());
                 lblTotalNotTaxFac.setText(orderEdit.getTotalNotTax());
                 lblTotalTaxFac.setText(orderEdit.getTotalTax());
@@ -153,18 +166,23 @@ public class OrderActivity extends AppCompatActivity {
                 // Disabled the inputs when are invoice view mode
                 txtDeliveryDate.setEnabled(false);
                 txtOrderDate.setEnabled(false);
-                txtInvoiceClient.setEnabled(false);
+                txtOrderClient.setEnabled(false);
                 btnAddClient.setEnabled(false);
                 btnOpenItems.setEnabled(false);
                 MyToolBar.show(this,"Detalle del pedido", true);
+            }else{
+                editOrder = false;
             }
 
             clientSearch = (Client) resourceBundle.getSerializable("CLIENT_SELECT");
             if (clientSearch != null) {
-                txtInvoiceClient.setText(clientSearch.getName());
+                txtOrderClient.setText(clientSearch.getName());
+                lblAddressDelivery.setText(clientSearch.getAddress());
             }else if(orderEdit != null) {
                 clientSearch = new Client();
                 clientSearch.setDocument(orderEdit.getClientDocument());
+                clientSearch.setAddress(orderEdit.getClientDirection());
+                clientSearch.setTelephone(orderEdit.getClientPhone());
             }
             String deliveryDate = mPref.getString("deliveryDate", "");
             String orderDate = mPref.getString("orderDate", "");
@@ -191,6 +209,7 @@ public class OrderActivity extends AppCompatActivity {
                 }
                 editor.apply();
                 Intent intent = new Intent(OrderActivity.this, SearchClientActivity.class);
+                intent.putExtra("returnOrder", true);
                 startActivity(intent);
             }
         });
@@ -200,7 +219,7 @@ public class OrderActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String deliveryDate = txtDeliveryDate.getText().toString();
                 String orderDate = txtOrderDate.getText().toString();
-                String invoiceClient = txtInvoiceClient.getText().toString();
+                String invoiceClient = txtOrderClient.getText().toString();
                 if (!deliveryDate.isEmpty() && !orderDate.isEmpty() && !invoiceClient.isEmpty()) {
                     if (clientSearch != null) {
                         viewDialogListItems();
@@ -224,6 +243,22 @@ public class OrderActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 showDeliveryDatePickerDialog();
+            }
+        });
+
+        listDetailOrderView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if(!editOrder) {
+                    DetailOrder detailOrder = listDetailOrders.get(position);
+                    listDetailOrders.remove(detailOrder);
+                    detailOrderAdapter = new DetailOrderAdapter(getApplicationContext(), listDetailOrders);
+                    listDetailOrderView.setAdapter(detailOrderAdapter);
+                    calculateTotalOrder();
+                    MyToastMessage.susses(OrderActivity.this, "Los datos se eliminarion correctamente");
+                }else{
+                    MyToastMessage.info(OrderActivity.this, "No se puede eliminar artículos porque el pedido ya se encuentra guardado");
+                }
             }
         });
     }
@@ -439,6 +474,47 @@ public class OrderActivity extends AppCompatActivity {
         });
     }
 
+    public void loadItemsCancelOrder(){
+        mDialog.show();
+        itemProvider.getListItems().addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    for (final DataSnapshot itemNode: snapshot.getChildren()){
+                        itemProvider.getItem(itemNode.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                if(snapshot.exists()){
+                                    Item item = new Item();
+                                    item.setBarCode(snapshot.child("barCode").getValue().toString());
+                                    item.setNameItem(snapshot.child("nameItem").getValue().toString());
+                                    item.setCost(snapshot.child("cost").getValue().toString());
+                                    item.setPriceRetail(snapshot.child("priceRetail").getValue().toString());
+                                    item.setPriceWholesaler(snapshot.child("priceWholesaler").getValue().toString());
+                                    item.setCommissionPercentage(snapshot.child("commissionPercentage").getValue().toString());
+                                    item.setStock(snapshot.child("stock").getValue().toString());
+                                    listItems.add(item);
+                                }
+                                mDialog.dismiss();
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {
+
+                            }
+                        });
+                    }
+                }else{
+                    mDialog.dismiss();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
 
     private void loadDataDriverUnit(final String barCode){
         driverUnitProvider.getListDriveUnit(barCode).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -551,14 +627,17 @@ public class OrderActivity extends AppCompatActivity {
                 double totalConIva = Double.parseDouble(lblTotalTaxFac.getText().toString());
                 double totalIva = Double.parseDouble(lblTaxFac.getText().toString());
                 double totalFac = Double.parseDouble(lblTotalFac.getText().toString());
+                double ivaItem = 0;
                 subTotalFac = subTotalFac + subTotalItem;
                 if(snapshot.exists()){
                     totalConIva = totalConIva + subTotalItem;
-                    totalIva = totalIva + (subTotalItem * Double.parseDouble(snapshot.child("valueTax").getValue().toString()) / 100);
+                    ivaItem = subTotalItem * Double.parseDouble(snapshot.child("valueTax").getValue().toString()) / 100;
+                    totalIva = totalIva + ivaItem;
                 }else{
                     totalSinIva = totalSinIva + subTotalItem;
+                    ivaItem = 0;
                 }
-                totalFac = totalFac + subTotalItem + totalIva;
+                totalFac = totalFac + subTotalItem + ivaItem;
                 lblSubTotalFac.setText(ValidationUtil.getTwoDecimal(subTotalFac));
                 lblTotalNotTaxFac.setText(ValidationUtil.getTwoDecimal(totalSinIva));
                 lblTotalTaxFac.setText(ValidationUtil.getTwoDecimal(totalConIva));
@@ -577,65 +656,200 @@ public class OrderActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.item_menu, menu);
+        getMenuInflater().inflate(R.menu.save_order_menu, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if(item.getItemId() == R.id.saveItem){
-            mDialog.show();
-            String deliveryDate = txtDeliveryDate.getText().toString();
-            String orderDate = txtOrderDate.getText().toString();
-            String invoiceClient = txtInvoiceClient.getText().toString();
-            String subTotalFac = lblSubTotalFac.getText().toString();
-            String totalNotTaxFac = lblTotalNotTaxFac.getText().toString();
-            String totalTaxFac = lblTotalTaxFac.getText().toString();
-            String taxFac = lblTaxFac.getText().toString();
-            String totalFac = lblTotalFac.getText().toString();
+        if(item.getItemId() == R.id.saveOrder){
+            if(!editOrder) {
+                mDialog.show();
+                String deliveryDate = txtDeliveryDate.getText().toString();
+                String orderDate = txtOrderDate.getText().toString();
+                String invoiceClient = txtOrderClient.getText().toString();
+                String subTotalFac = lblSubTotalFac.getText().toString();
+                String totalNotTaxFac = lblTotalNotTaxFac.getText().toString();
+                String totalTaxFac = lblTotalTaxFac.getText().toString();
+                String taxFac = lblTaxFac.getText().toString();
+                String totalFac = lblTotalFac.getText().toString();
 
-            if (!deliveryDate.isEmpty() && !orderDate.isEmpty() && !invoiceClient.isEmpty()) {
-                if (listDetailOrders.size() > 0) {
-                    headerOrder.setStatusOrder("PENDIENTE");
-                    headerOrder.setDeliveryDate(deliveryDate);
-                    headerOrder.setIdOrder("1");
-                    headerOrder.setOrderDate(orderDate);
-                    headerOrder.setClientDocument(clientSearch.getDocument());
-                    headerOrder.setClientName(invoiceClient);
-                    headerOrder.setClientDirection(clientSearch.getAddress());
-                    headerOrder.setClientPhone(clientSearch.getTelephone());
-                    headerOrder.setTotalInvoice(totalFac);
-                    headerOrder.setSubTotal(subTotalFac);
-                    headerOrder.setTotalIva(taxFac);
-                    headerOrder.setTotalTax(totalTaxFac);
-                    headerOrder.setTotalNotTax(totalNotTaxFac);
-                    createHeaderInvoice(headerOrder);
+                if (!deliveryDate.isEmpty() && !orderDate.isEmpty() && !invoiceClient.isEmpty()) {
+                    if (listDetailOrders.size() > 0) {
+                        headerOrder.setStatusOrder("PENDIENTE");
+                        headerOrder.setDeliveryDate(deliveryDate);
+                        headerOrder.setOrderDate(orderDate);
+                        headerOrder.setClientDocument(clientSearch.getDocument());
+                        headerOrder.setClientName(invoiceClient);
+                        headerOrder.setClientDirection(clientSearch.getAddress());
+                        headerOrder.setClientPhone(clientSearch.getTelephone());
+                        headerOrder.setTotalInvoice(totalFac);
+                        headerOrder.setSubTotal(subTotalFac);
+                        headerOrder.setTotalIva(taxFac);
+                        headerOrder.setTotalTax(totalTaxFac);
+                        headerOrder.setTotalNotTax(totalNotTaxFac);
+                        FirebaseUser userLogin = fireAuth.getCurrentUser();
+                        if(userLogin != null){
+                            headerOrder.setUserId(userLogin.getEmail());
+                        }
+                        createHeaderOrder(headerOrder);
+                    } else {
+                        MyToastMessage.error(this, "Ingrese detalles al pedido");
+                        mDialog.dismiss();
+                    }
                 } else {
-                    MyToastMessage.error(this, "Ingrese detalles al comprobante");
+                    MyToastMessage.error(this, "Ingrese todos los campos del pedido");
                     mDialog.dismiss();
                 }
-            } else {
-                MyToastMessage.error(this, "Ingrese todos los campos del comprobante");
-                mDialog.dismiss();
+            }else{
+                MyToastMessage.info(this, "El pedido ya se encuentra guardado");
+            }
+        }
+        // Option delivery
+        if(item.getItemId() == R.id.menuDelivery){
+            if(editOrder && !headerOrder.getIdOrder().isEmpty() && !listDetailOrders.isEmpty()) {
+                if(headerOrder.getStatusOrder().equals("ENTREGADO")){
+                    MyToastMessage.info(OrderActivity.this, "El pedido ya se encuentra entregado");
+                }else {
+                    openDialogDelivery();
+                }
+            }else{
+                MyToastMessage.info(OrderActivity.this, "No existe ningun pedido seleccionado guardado");
+            }
+        }
+
+        // Option cancel
+        if(item.getItemId() == R.id.menuCancel){
+            if(editOrder && !headerOrder.getIdOrder().isEmpty() && !listDetailOrders.isEmpty()) {
+                if(headerOrder.getStatusOrder().equals("ENTREGADO")){
+                    MyToastMessage.warn(OrderActivity.this, "No se puede cancelar porque el pedido ya se encuentra entregado");
+                }else {
+                    openDialogCancel();
+                }
+            }else{
+                MyToastMessage.info(OrderActivity.this, "No existe ningun pedido seleccionado guardado");
             }
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void openDialogCancel() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(OrderActivity.this);
+        LayoutInflater inflater = getLayoutInflater();
+        View view = inflater.inflate(R.layout.confirm_dialog, null);
+        builder.setView(view);
+        final AlertDialog dialog = builder.create();
+        dialog.show();
+        btnYesCancel = view.findViewById(R.id.btnConfirmCancel);
+        btnNoCancel = view.findViewById(R.id.btnNotConfirmCancel);
+        lblMessageDialog =  view.findViewById(R.id.lblMessageDialog);
+        lblTitleDialog =  view.findViewById(R.id.lblTitleDialog);
+        lblMessageDialog.setText("Seguro que desea cancelar el pedido seleccionado?");
+        lblTitleDialog.setText("Cancelar pedido");
+        itemProvider = new ItemProvider();
+        listItems = new ArrayList<>();
+        loadItemsCancelOrder();
+        btnYesCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDialog.show();
+                orderProvider.deleteOrder(headerOrder.getIdOrder()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            updateStockItem(listDetailOrders, headerOrder.getIdOrder(), "plus");
+                            Intent intent = new Intent(OrderActivity.this, ListOrderActivity.class);
+                            startActivity(intent);
+                        } else {
+                            MyToastMessage.error(OrderActivity.this, "Error al cancelar el pedido");
+                            mDialog.hide();
+                        }
+                    }
+                });
+            }
+        });
+        btnNoCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+    }
+
+    private void openDialogDelivery() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(OrderActivity.this);
+        LayoutInflater inflater = getLayoutInflater();
+        View view = inflater.inflate(R.layout.confirm_dialog, null);
+        builder.setView(view);
+        final AlertDialog dialog = builder.create();
+        dialog.show();
+        btnYesCancel = view.findViewById(R.id.btnConfirmCancel);
+        btnNoCancel = view.findViewById(R.id.btnNotConfirmCancel);
+        lblMessageDialog =  view.findViewById(R.id.lblMessageDialog);
+        lblTitleDialog =  view.findViewById(R.id.lblTitleDialog);
+        lblMessageDialog.setText("El pedido se marcará como entregado, desea continuar?");
+        lblTitleDialog.setText("Entregar pedido");
+
+        btnYesCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDialog.show();
+                orderProvider.updateStatusOrder(headerOrder.getIdOrder(), "ENTREGADO").addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            MyToastMessage.susses(OrderActivity.this, "El pedido se guardó correctamente");
+                            Intent intent = new Intent(OrderActivity.this, ListOrderActivity.class);
+                            startActivity(intent);
+                        } else {
+                            MyToastMessage.error(OrderActivity.this, "Error al cambiar estado al pedido");
+                            mDialog.hide();
+                        }
+                    }
+                });
+            }
+        });
+        btnNoCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
     }
 
     /**
      * Method for create and save the invoice
      * @param order The data header of the invoice
      */
-    void createHeaderInvoice(final HeaderOrder order) {
-        orderProvider.createHeaderOrder(order).addOnCompleteListener(new OnCompleteListener<Void>() {
+    void createHeaderOrder(final HeaderOrder order) {
+        sequenceProvider.getSequence("order").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
-                    createDetailInvoice(order.getIdOrder(), listDetailOrders);
-                } else {
-                    MyToastMessage.error(OrderActivity.this, "No se pudo crear el comprobante");
-                    mDialog.hide();
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                final int[] sequence = {1};
+                if(snapshot.exists()){
+                    sequence[0] = Integer.parseInt(snapshot.getValue().toString());
                 }
+                if(headerOrder.getIdOrder() == null){
+                    order.setIdOrder(String.valueOf(sequence[0]));
+                    sequence[0]++;
+                }
+                orderProvider.createHeaderOrder(order).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            createDetailOrder(order.getIdOrder(), listDetailOrders, String.valueOf(sequence[0]));
+                        } else {
+                            MyToastMessage.error(OrderActivity.this, "Error al guardar los datos del pedido");
+                            mDialog.hide();
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
             }
         });
     }
@@ -645,14 +859,16 @@ public class OrderActivity extends AppCompatActivity {
      * @param idOrder The number of document of invoice
      * @param detailsInvoice The list of details to save
      */
-    void createDetailInvoice(String idOrder, final List<DetailOrder> detailsInvoice) {
+    void createDetailOrder(String idOrder, final List<DetailOrder> detailsInvoice, final String numberOrder) {
         orderProvider.createDetailsOrder(idOrder, detailsInvoice).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
                     MyToastMessage.susses(OrderActivity.this, "El comprobante se creó correctamente");
                     try {
-                        updateStockItem(detailsInvoice);
+                        Intent intent = new Intent(OrderActivity.this, ListOrderActivity.class);
+                        startActivity(intent);
+                        updateStockItem(detailsInvoice, numberOrder, "remove");
                     }catch (Exception e){
                         e.printStackTrace();
                     }
@@ -668,7 +884,7 @@ public class OrderActivity extends AppCompatActivity {
      * Method for create and save the details of invoice
      * @param detailsInvoice The list of details to save
      */
-    void updateStockItem(List<DetailOrder> detailsInvoice) {
+    void updateStockItem(List<DetailOrder> detailsInvoice, final String numberOrder, String action) {
         for (final DetailOrder detailInvoice: detailsInvoice){
             int stockExists = 0;
             for(Item itemTemp : listItems){
@@ -679,14 +895,31 @@ public class OrderActivity extends AppCompatActivity {
             }
             int quantityOrder = Integer.parseInt(detailInvoice.getQuantity());
             int valueDriverOrder = Integer.parseInt(detailInvoice.getValueDriverUnit());
-            int newStock = stockExists - (quantityOrder * valueDriverOrder);
+            int newStock = 0;
+            if(action.equals("remove")){
+                newStock = stockExists - (quantityOrder * valueDriverOrder);
+            }else{
+                newStock = stockExists + (quantityOrder * valueDriverOrder);
+            }
             itemProvider.updateStockItem(detailInvoice.getBarCodeItem(), String.valueOf(newStock)).addOnCompleteListener(new OnCompleteListener<Void>() {
                 @Override
                 public void onComplete(@NonNull Task<Void> task) {
                     if (task.isSuccessful()) {
-                        mDialog.dismiss();
+                        sequenceProvider.createUpdateSequence("order", numberOrder).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                MyToastMessage.susses(OrderActivity.this, "El acción se ejecutó correctamente");
+                                mDialog.hide();
+                            } else {
+                                MyToastMessage.error(OrderActivity.this, "Error al actualizar secuencia");
+                                mDialog.hide();
+                            }
+                            }
+                        });
                     } else {
                         MyToastMessage.error(OrderActivity.this, "Error al actualizar stock del artículo");
+                        mDialog.hide();
                     }
                 }
             });
@@ -743,6 +976,33 @@ public class OrderActivity extends AppCompatActivity {
         });
     }
 
-
-
+    /**
+     * Method for calculate the total of order
+     */
+    private void calculateTotalOrder(){
+        double subTotalFac = 0;
+        double totalSinIva = 0;
+        double totalConIva = 0;
+        double totalIva = 0;
+        double totalFac = 0;
+        double ivaItem;
+        for (DetailOrder detailInvoice: listDetailOrders){
+            double subTotalItem = Double.parseDouble(detailInvoice.getSubTotal());
+            subTotalFac = subTotalFac + subTotalItem;
+            if(Boolean.parseBoolean(detailInvoice.getExistsTax())){
+                totalConIva = totalConIva + subTotalItem;
+                ivaItem = (subTotalItem * 12) / 100;
+                totalIva = totalIva + ivaItem;
+            }else{
+                totalSinIva = totalSinIva + subTotalItem;
+                ivaItem = 0;
+            }
+            totalFac = totalFac + subTotalItem + ivaItem;
+        }
+        lblSubTotalFac.setText(ValidationUtil.getTwoDecimal(subTotalFac));
+        lblTotalNotTaxFac.setText(ValidationUtil.getTwoDecimal(totalSinIva));
+        lblTotalTaxFac.setText(ValidationUtil.getTwoDecimal(totalConIva));
+        lblTaxFac.setText(ValidationUtil.getTwoDecimal(totalIva));
+        lblTotalFac.setText(ValidationUtil.getTwoDecimal(totalFac));
+    }
 }

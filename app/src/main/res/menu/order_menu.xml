@@ -7,8 +7,13 @@
         app:showAsAction="ifRoom|collapseActionView"
         app:actionViewClass="androidx.appcompat.widget.SearchView"/>
 
+    <item android:id="@+id/reportOrder"
+        android:title="Reporte de pedidos"
+        android:icon="@drawable/icon_report"
+        app:showAsAction="always"/>
+
     <item android:id="@+id/newOrder"
         android:title="Nuevo pedido"
-        android:icon="@drawable/icon_invoice_add"
+        android:icon="@drawable/icon_order_add"
         app:showAsAction="always"/>
 </menu>

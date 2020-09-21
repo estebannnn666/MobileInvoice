@@ -6,7 +6,10 @@
         android:icon="@drawable/ic_search_white"
         app:showAsAction="ifRoom|collapseActionView"
         app:actionViewClass="androidx.appcompat.widget.SearchView"/>
-
+    <item android:id="@+id/printPdf"
+            android:title="Imprimir pdf"
+            android:icon="@drawable/icon_report"
+            app:showAsAction="always"/>
     <item android:id="@+id/newInvoice"
         android:title="Nueva factura"
         android:icon="@drawable/icon_invoice_add"

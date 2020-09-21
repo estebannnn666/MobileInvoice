@@ -82,16 +82,16 @@ public class LoginActivity extends AppCompatActivity {
                                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                         startActivity(intent);
                                     }
+                                    alertDialog.dismiss();
                                 }
-
                                 @Override
                                 public void onCancelled(@NonNull DatabaseError error) {
                                 }
                             });
                         }else{
                             MyToastMessage.error(LoginActivity.this, "El email o la contraseña son incorrectos");
+                            alertDialog.dismiss();
                         }
-                        alertDialog.dismiss();
                     }
                 });
             }else{

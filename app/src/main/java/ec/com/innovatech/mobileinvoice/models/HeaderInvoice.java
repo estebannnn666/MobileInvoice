@@ -20,8 +20,9 @@ public class HeaderInvoice implements Serializable {
     private String totalInvoice ;
     private String typeDocumentCode ;
     private String valueDocumentCode ;
+    private String userId;
 
-    public HeaderInvoice(String numberDocument, String invoiceReferenceCode, String dateDocument, String clientDocument, String clientName, String clientDirection, String clientPhone, String paidOut, String discount, String totalNotTax, String totalTax, String totalIva, String subTotal, String totalInvoice, String typeDocumentCode, String valueDocumentCode){
+    public HeaderInvoice(String numberDocument, String invoiceReferenceCode, String dateDocument, String clientDocument, String clientName, String clientDirection, String clientPhone, String paidOut, String discount, String totalNotTax, String totalTax, String totalIva, String subTotal, String totalInvoice, String typeDocumentCode, String valueDocumentCode, String userId){
         this.numberDocument = numberDocument;
         this.invoiceReferenceCode = invoiceReferenceCode;
         this.dateDocument = dateDocument;
@@ -38,6 +39,7 @@ public class HeaderInvoice implements Serializable {
         this.totalInvoice = totalInvoice;
         this.typeDocumentCode = typeDocumentCode;
         this.valueDocumentCode = valueDocumentCode;
+        this.userId = userId;
     }
 
     public HeaderInvoice(){
@@ -169,5 +171,12 @@ public class HeaderInvoice implements Serializable {
 
     public void setValueDocumentCode(String valueDocumentCode) {
         this.valueDocumentCode = valueDocumentCode;
+    }
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 }

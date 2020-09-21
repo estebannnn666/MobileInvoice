@@ -7,25 +7,27 @@ import androidx.appcompat.widget.SearchView;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 
 import dmax.dialog.SpotsDialog;
 import ec.com.innovatech.mobileinvoice.R;
+import ec.com.innovatech.mobileinvoice.includes.MyToastMessage;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
-import ec.com.innovatech.mobileinvoice.invoices.HeaderInvoiceAdapter;
-import ec.com.innovatech.mobileinvoice.invoices.InvoiceActivity;
 import ec.com.innovatech.mobileinvoice.models.HeaderInvoice;
 import ec.com.innovatech.mobileinvoice.providers.InvoiceProvider;
 import ec.com.innovatech.mobileinvoice.util.ValidationUtil;
@@ -43,6 +45,11 @@ public class ListChargesActivity extends AppCompatActivity {
     double totalValue;
     int totalDocuments;
 
+    Button btnYesCancel;
+    Button btnNoCancel;
+    TextView lblTitleDialog;
+    TextView lblMessageDialog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,66 +64,96 @@ public class ListChargesActivity extends AppCompatActivity {
         headerInvoices = new ArrayList<>();
         loadInvoicesNotPaid();
         totalValue = 0;
-        /*listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(ListChargesActivity.this, InvoiceActivity.class);
-                intent.putExtra("INVOICE_SELECT", headerInvoices.get(position));
-                startActivity(intent);
+                openDialogPay(headerInvoices.get(position));
             }
-        });*/
+        });
 
 
     }
 
+    private void openDialogPay(final HeaderInvoice headerInvoice) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(ListChargesActivity.this);
+        LayoutInflater inflater = getLayoutInflater();
+        View view = inflater.inflate(R.layout.confirm_dialog, null);
+        builder.setView(view);
+        final AlertDialog dialog = builder.create();
+        dialog.show();
+        btnYesCancel = view.findViewById(R.id.btnConfirmCancel);
+        btnNoCancel = view.findViewById(R.id.btnNotConfirmCancel);
+        lblMessageDialog =  view.findViewById(R.id.lblMessageDialog);
+        lblTitleDialog =  view.findViewById(R.id.lblTitleDialog);
+        lblMessageDialog.setText("Seguro que desea margar como pagada a la factura seleccionada?");
+        lblTitleDialog.setText("Pagar factura");
+
+        btnYesCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+            mDialog.show();
+            invoiceProvider.updatePayInvoice(headerInvoice.getNumberDocument(), "true").addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()) {
+                        MyToastMessage.susses(ListChargesActivity.this, "La factura seleccionada se marcó como pagada.");
+                        loadInvoicesNotPaid();
+                        mDialog.hide();
+                        dialog.dismiss();
+                    } else {
+                        MyToastMessage.error(ListChargesActivity.this, "Error al pagar la factura");
+                        mDialog.hide();
+                        dialog.dismiss();
+                    }
+                }
+            });
+            }
+        });
+        btnNoCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+    }
+
     public void loadInvoicesNotPaid(){
         mDialog.show();
-        invoiceProvider.getListInvoices().addListenerForSingleValueEvent(new ValueEventListener() {
+        invoiceProvider.getListInvoicesOrder().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
+                    totalValue = 0;
                     lblListEmpty.setText("");
                     totalDocuments = 0;
                     for (final DataSnapshot invoiceNode: snapshot.getChildren()){
-                        invoiceProvider.getInvoice(invoiceNode.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                if(snapshot.exists()){
-                                    if(snapshot.child("paidOut").getValue().toString().equals("false")){
-                                        HeaderInvoice headerInvoice = new HeaderInvoice();
-                                        headerInvoice.setTypeDocumentCode(snapshot.child("typeDocumentCode").getValue().toString());
-                                        headerInvoice.setTotalNotTax(snapshot.child("totalNotTax").getValue().toString());
-                                        headerInvoice.setTotalTax(snapshot.child("totalTax").getValue().toString());
-                                        headerInvoice.setTotalIva(snapshot.child("totalIva").getValue().toString());
-                                        headerInvoice.setSubTotal(snapshot.child("subTotal").getValue().toString());
-                                        headerInvoice.setTotalInvoice(snapshot.child("totalInvoice").getValue().toString());
-                                        headerInvoice.setPaidOut(snapshot.child("paidOut").getValue().toString());
-                                        headerInvoice.setDateDocument(snapshot.child("dateDocument").getValue().toString());
-                                        headerInvoice.setNumberDocument(snapshot.child("numberDocument").getValue().toString());
-                                        headerInvoice.setClientPhone(snapshot.child("clientPhone").getValue().toString());
-                                        headerInvoice.setClientDirection(snapshot.child("clientDirection").getValue().toString());
-                                        headerInvoice.setClientName(snapshot.child("clientName").getValue().toString());
-                                        headerInvoice.setClientDocument(snapshot.child("clientDocument").getValue().toString());
-                                        headerInvoice.setValueDocumentCode(snapshot.child("valueDocumentCode").getValue().toString());
-                                        headerInvoices.add(headerInvoice);
-                                        invoiceAdapter = new InvoiceAdapter(getBaseContext(), headerInvoices);
-                                        listView.setAdapter(invoiceAdapter);
-                                        totalValue = totalValue + Double.parseDouble(headerInvoice.getTotalInvoice());
-                                        totalDocuments++;
-                                        String totalFormat = ValidationUtil.getTwoDecimal(totalValue);
-                                        lblTotalAccounts.setText(totalFormat);
-                                        lblNumberDocuments.setText(""+totalDocuments);
-                                    }
-                                }
-                                mDialog.dismiss();
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError error) {
-
-                            }
-                        });
+                        if(invoiceNode.child("Header").child("paidOut").getValue().toString().equals("false")){
+                            HeaderInvoice headerInvoice = new HeaderInvoice();
+                            headerInvoice.setTypeDocumentCode(invoiceNode.child("Header").child("typeDocumentCode").getValue().toString());
+                            headerInvoice.setTotalNotTax(invoiceNode.child("Header").child("totalNotTax").getValue().toString());
+                            headerInvoice.setTotalTax(invoiceNode.child("Header").child("totalTax").getValue().toString());
+                            headerInvoice.setTotalIva(invoiceNode.child("Header").child("totalIva").getValue().toString());
+                            headerInvoice.setSubTotal(invoiceNode.child("Header").child("subTotal").getValue().toString());
+                            headerInvoice.setTotalInvoice(invoiceNode.child("Header").child("totalInvoice").getValue().toString());
+                            headerInvoice.setPaidOut(invoiceNode.child("Header").child("paidOut").getValue().toString());
+                            headerInvoice.setDateDocument(invoiceNode.child("Header").child("dateDocument").getValue().toString());
+                            headerInvoice.setNumberDocument(invoiceNode.child("Header").child("numberDocument").getValue().toString());
+                            headerInvoice.setClientPhone(invoiceNode.child("Header").child("clientPhone").getValue().toString());
+                            headerInvoice.setClientDirection(invoiceNode.child("Header").child("clientDirection").getValue().toString());
+                            headerInvoice.setClientName(invoiceNode.child("Header").child("clientName").getValue().toString());
+                            headerInvoice.setClientDocument(invoiceNode.child("Header").child("clientDocument").getValue().toString());
+                            headerInvoice.setValueDocumentCode(invoiceNode.child("Header").child("valueDocumentCode").getValue().toString());
+                            headerInvoices.add(headerInvoice);
+                            invoiceAdapter = new InvoiceAdapter(getBaseContext(), headerInvoices);
+                            listView.setAdapter(invoiceAdapter);
+                            totalValue = totalValue + Double.parseDouble(headerInvoice.getTotalInvoice());
+                            totalDocuments++;
+                            String totalFormat = ValidationUtil.getTwoDecimal(totalValue);
+                            lblTotalAccounts.setText(totalFormat);
+                            lblNumberDocuments.setText(""+totalDocuments);
+                        }
                     }
+                    mDialog.dismiss();
                 }else{
                     lblListEmpty.setText("No existen facturas pendientes de cobro");
                     mDialog.dismiss();

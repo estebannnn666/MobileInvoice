@@ -3,6 +3,7 @@ package ec.com.innovatech.mobileinvoice.providers;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 
 import java.util.List;
 
@@ -25,8 +26,16 @@ public class InvoiceProvider {
         return mDataBase.child(numberDocument).child("Details").setValue(detailsInvoice);
     }
 
+    public Task<Void> updatePayInvoice(String numberDocument, String valuePay){
+        return mDataBase.child(numberDocument).child("Header").child("paidOut").setValue(valuePay);
+    }
+
     public DatabaseReference getListInvoices(){
         return mDataBase;
+    }
+
+    public Query getListInvoicesOrder(){
+        return mDataBase.orderByChild("Header/dateDocument");
     }
 
     public DatabaseReference getInvoice(String numberDocument){

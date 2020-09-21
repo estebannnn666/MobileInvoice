@@ -27,6 +27,7 @@ import ec.com.innovatech.mobileinvoice.clients.ClientAdapter;
 import ec.com.innovatech.mobileinvoice.clients.ListClientActivity;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
 import ec.com.innovatech.mobileinvoice.models.Client;
+import ec.com.innovatech.mobileinvoice.orders.OrderActivity;
 import ec.com.innovatech.mobileinvoice.providers.ClientProvider;
 
 public class SearchClientActivity extends AppCompatActivity {
@@ -53,9 +54,16 @@ public class SearchClientActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(SearchClientActivity.this, InvoiceActivity.class);
-                intent.putExtra("CLIENT_SELECT", listClients.get(position));
-                startActivity(intent);
+                boolean valor = getIntent().getExtras().getBoolean("returnOrder");
+                if(valor){
+                    Intent intent = new Intent(SearchClientActivity.this, OrderActivity.class);
+                    intent.putExtra("CLIENT_SELECT", listClients.get(position));
+                    startActivity(intent);
+                }else {
+                    Intent intent = new Intent(SearchClientActivity.this, InvoiceActivity.class);
+                    intent.putExtra("CLIENT_SELECT", listClients.get(position));
+                    startActivity(intent);
+                }
             }
         });
     }

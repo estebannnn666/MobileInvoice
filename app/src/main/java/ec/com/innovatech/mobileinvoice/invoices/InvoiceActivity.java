@@ -34,6 +34,8 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
@@ -56,6 +58,7 @@ import ec.com.innovatech.mobileinvoice.includes.MyToastMessage;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
 import ec.com.innovatech.mobileinvoice.models.Client;
 import ec.com.innovatech.mobileinvoice.models.DetailInvoice;
+import ec.com.innovatech.mobileinvoice.models.DetailOrder;
 import ec.com.innovatech.mobileinvoice.models.DriveUnit;
 import ec.com.innovatech.mobileinvoice.models.DriverUnitSpinner;
 import ec.com.innovatech.mobileinvoice.models.Enterprise;
@@ -72,6 +75,7 @@ import ec.com.innovatech.mobileinvoice.util.ValidationUtil;
 public class InvoiceActivity extends AppCompatActivity{
     SharedPreferences mPref;
     SharedPreferences.Editor editor;
+    FirebaseAuth fireAuth;
     AlertDialog mDialog;
     Button btnAddClient;
     Button btnOpenItems;
@@ -146,6 +150,7 @@ public class InvoiceActivity extends AppCompatActivity{
         }
         mPref = getApplicationContext().getSharedPreferences("invoice", MODE_PRIVATE);
         editor = mPref.edit();
+        fireAuth = FirebaseAuth.getInstance();
         MyToolBar.show(this,"Nueva venta", true);
         mDialog = new SpotsDialog.Builder().setContext(InvoiceActivity.this).setMessage("Espere un momento").build();
         btnAddClient = findViewById(R.id.btnAddClient);
@@ -274,6 +279,7 @@ public class InvoiceActivity extends AppCompatActivity{
                 }
                 editor.apply();
                 Intent intent = new Intent(InvoiceActivity.this, SearchClientActivity.class);
+                intent.putExtra("returnOrder", false);
                 startActivity(intent);
             }
         });
@@ -281,24 +287,28 @@ public class InvoiceActivity extends AppCompatActivity{
         btnOpenItems.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String typeDocument = "";
-                if(radioInvoice.isChecked()){
-                    typeDocument = (String)radioInvoice.getText();
-                }
-                if(radioNoteSale.isChecked()){
-                    typeDocument = (String)radioNoteSale.getText();
-                }
-                String numberInvoice = txtNumberInvoice.getText().toString();
-                String invoiceDate = txInvoiceDate.getText().toString();
-                String invoiceClient = txtInvoiceClient.getText().toString();
-                if (!numberInvoice.isEmpty() && !invoiceDate.isEmpty() && !invoiceClient.isEmpty() && !typeDocument.isEmpty()) {
-                    if (clientSearch != null) {
-                        viewDialogListItems();
+                if(editInvoice && !printActive) {
+                    String typeDocument = "";
+                    if (radioInvoice.isChecked()) {
+                        typeDocument = (String) radioInvoice.getText();
+                    }
+                    if (radioNoteSale.isChecked()) {
+                        typeDocument = (String) radioNoteSale.getText();
+                    }
+                    String numberInvoice = txtNumberInvoice.getText().toString();
+                    String invoiceDate = txInvoiceDate.getText().toString();
+                    String invoiceClient = txtInvoiceClient.getText().toString();
+                    if (!numberInvoice.isEmpty() && !invoiceDate.isEmpty() && !invoiceClient.isEmpty() && !typeDocument.isEmpty()) {
+                        if (clientSearch != null) {
+                            viewDialogListItems();
+                        } else {
+                            MyToastMessage.info(InvoiceActivity.this, "Seleccione el cliente para agregar detalles");
+                        }
                     } else {
-                        MyToastMessage.info(InvoiceActivity.this, "Seleccione el cliente para agregar detalles");
+                        MyToastMessage.info(InvoiceActivity.this, "Ingrese los datos de la cabecera del comprobante");
                     }
                 }else{
-                    MyToastMessage.info(InvoiceActivity.this, "Ingrese los datos de la cabecera del comprobante");
+                    MyToastMessage.info(InvoiceActivity.this, "No se puede agregar artículos porque el comprobante ya se encuentra guardado");
                 }
             }
         });
@@ -307,6 +317,22 @@ public class InvoiceActivity extends AppCompatActivity{
             @Override
             public void onClick(View v) {
                 showDatePickerDialog();
+            }
+        });
+
+        listDetailInvoiceView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if(editInvoice && !printActive) {
+                    DetailInvoice detailInvoice = listDetailInvoice.get(position);
+                    listDetailInvoice.remove(detailInvoice);
+                    detailInvoiceAdapter = new DetailInvoiceAdapter(getApplicationContext(), listDetailInvoice);
+                    listDetailInvoiceView.setAdapter(detailInvoiceAdapter);
+                    calculateTotalInvoice();
+                    MyToastMessage.susses(InvoiceActivity.this, "Los datos se eliminarion correctamente");
+                }else{
+                    MyToastMessage.info(InvoiceActivity.this, "No se puede eliminar artículos porque el comprobante ya se encuentra guardado");
+                }
             }
         });
     }
@@ -621,14 +647,17 @@ public class InvoiceActivity extends AppCompatActivity{
                 double totalConIva = Double.parseDouble(lblTotalTaxFac.getText().toString());
                 double totalIva = Double.parseDouble(lblTaxFac.getText().toString());
                 double totalFac = Double.parseDouble(lblTotalFac.getText().toString());
+                double ivaItem = 0;
                 subTotalFac = subTotalFac + subTotalItem;
                 if(snapshot.exists()){
                     totalConIva = totalConIva + subTotalItem;
-                    totalIva = totalIva + (subTotalItem * Double.parseDouble(snapshot.child("valueTax").getValue().toString()) / 100);
+                    ivaItem = subTotalItem * Double.parseDouble(snapshot.child("valueTax").getValue().toString()) / 100;
+                    totalIva = totalIva + ivaItem;
                 }else{
                     totalSinIva = totalSinIva + subTotalItem;
+                    ivaItem = 0;
                 }
-                totalFac = totalFac + subTotalItem + totalIva;
+                totalFac = totalFac + subTotalItem + ivaItem;
                 lblSubTotalFac.setText(ValidationUtil.getTwoDecimal(subTotalFac));
                 lblTotalNotTaxFac.setText(ValidationUtil.getTwoDecimal(totalSinIva));
                 lblTotalTaxFac.setText(ValidationUtil.getTwoDecimal(totalConIva));
@@ -654,7 +683,7 @@ public class InvoiceActivity extends AppCompatActivity{
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if(item.getItemId() == R.id.saveItem){
-            if(editInvoice) {
+            if(editInvoice && !printActive) {
                 mDialog.show();
                 String typeDocument = "";
                 if (radioInvoice.isChecked()) {
@@ -689,6 +718,10 @@ public class InvoiceActivity extends AppCompatActivity{
                         headerInvoice.setTotalIva(taxFac);
                         headerInvoice.setTotalTax(totalTaxFac);
                         headerInvoice.setTotalNotTax(totalNotTaxFac);
+                        FirebaseUser userLogin = fireAuth.getCurrentUser();
+                        if(userLogin != null){
+                            headerInvoice.setUserId(userLogin.getEmail());
+                        }
                         createHeaderInvoice(headerInvoice);
                     } else {
                         MyToastMessage.error(this, "Ingrese detalles al comprobante");
@@ -757,7 +790,9 @@ public class InvoiceActivity extends AppCompatActivity{
                     try {
                         printActive = true;
                         updateStockItem(detailsInvoice);
-                        //printData();
+                        printData();
+                        Intent intent = new Intent(InvoiceActivity.this, ListInvoiceActivity.class);
+                        startActivity(intent);
                     }catch (Exception e){
                         e.printStackTrace();
                     }
@@ -1092,5 +1127,35 @@ public class InvoiceActivity extends AppCompatActivity{
             public void onCancelled(@NonNull DatabaseError error) {
             }
         });
+    }
+
+    /**
+     * Method for calculate the total of invoice
+     */
+    private void calculateTotalInvoice(){
+        double subTotalFac = 0;
+        double totalSinIva = 0;
+        double totalConIva = 0;
+        double totalIva = 0;
+        double totalFac = 0;
+        double ivaItem;
+        for (DetailInvoice detailInvoice: listDetailInvoice){
+                double subTotalItem = Double.parseDouble(detailInvoice.getSubTotal());
+                subTotalFac = subTotalFac + subTotalItem;
+                if(Boolean.parseBoolean(detailInvoice.getExistsTax())){
+                    totalConIva = totalConIva + subTotalItem;
+                    ivaItem = (subTotalItem * 12) / 100;
+                    totalIva = totalIva + ivaItem;
+                }else{
+                    totalSinIva = totalSinIva + subTotalItem;
+                    ivaItem = 0;
+                }
+                totalFac = totalFac + subTotalItem + ivaItem;
+        }
+        lblSubTotalFac.setText(ValidationUtil.getTwoDecimal(subTotalFac));
+        lblTotalNotTaxFac.setText(ValidationUtil.getTwoDecimal(totalSinIva));
+        lblTotalTaxFac.setText(ValidationUtil.getTwoDecimal(totalConIva));
+        lblTaxFac.setText(ValidationUtil.getTwoDecimal(totalIva));
+        lblTotalFac.setText(ValidationUtil.getTwoDecimal(totalFac));
     }
 }

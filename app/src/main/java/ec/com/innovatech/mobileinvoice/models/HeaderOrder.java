@@ -18,8 +18,9 @@ public class HeaderOrder implements Serializable {
     private String totalIva ;
     private String subTotal ;
     private String totalInvoice ;
+    private String userId;
 
-    public HeaderOrder(String numberDocument, String orderDate, String deliveryDate, String statusOrder, String clientDocument, String clientName, String clientDirection, String clientPhone, String discount, String totalNotTax, String totalTax, String totalIva, String subTotal, String totalInvoice){
+    public HeaderOrder(String numberDocument, String orderDate, String deliveryDate, String statusOrder, String clientDocument, String clientName, String clientDirection, String clientPhone, String discount, String totalNotTax, String totalTax, String totalIva, String subTotal, String totalInvoice, String userId){
         this.idOrder = numberDocument;
         this.orderDate = orderDate;
         this.deliveryDate = deliveryDate;
@@ -34,6 +35,7 @@ public class HeaderOrder implements Serializable {
         this.totalIva = totalIva;
         this.subTotal = subTotal;
         this.totalInvoice = totalInvoice;
+        this.userId = userId;
     }
 
     public HeaderOrder(){
@@ -149,5 +151,13 @@ public class HeaderOrder implements Serializable {
 
     public void setTotalInvoice(String totalInvoice) {
         this.totalInvoice = totalInvoice;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 }

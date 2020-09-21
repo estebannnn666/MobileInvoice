@@ -1,12 +1,19 @@
 package ec.com.innovatech.mobileinvoice.orders;
 
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.print.PrintManager;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.DatePicker;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -23,10 +30,15 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 import dmax.dialog.SpotsDialog;
 import ec.com.innovatech.mobileinvoice.R;
+import ec.com.innovatech.mobileinvoice.includes.MyToastMessage;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
+import ec.com.innovatech.mobileinvoice.invoices.DatePickerFragment;
+import ec.com.innovatech.mobileinvoice.invoices.ListInvoiceActivity;
+import ec.com.innovatech.mobileinvoice.models.DetailOrder;
 import ec.com.innovatech.mobileinvoice.models.HeaderOrder;
 import ec.com.innovatech.mobileinvoice.providers.OrderProvider;
 import ec.com.innovatech.mobileinvoice.util.ValidationUtil;
@@ -43,6 +55,7 @@ public class ListOrderActivity extends AppCompatActivity {
     TextView lblNumberDocuments;
     double totalValue;
     int totalDocuments;
+    List<DetailOrder> listOrderReport;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,7 +86,7 @@ public class ListOrderActivity extends AppCompatActivity {
 
     public void loadDataOrders(){
         mDialog.show();
-        orderProvider.getListOrder().addListenerForSingleValueEvent(new ValueEventListener() {
+        orderProvider.getListOrderSorted().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String totalFormat = ValidationUtil.getTwoDecimal(totalValue);
@@ -185,6 +198,184 @@ public class ListOrderActivity extends AppCompatActivity {
             Intent intent = new Intent(ListOrderActivity.this, OrderActivity.class);
             startActivity(intent);
         }
+        if(item.getItemId() == R.id.reportOrder){
+            viewDialogSearchOrder();
+        }
         return super.onOptionsItemSelected(item);
+    }
+
+    TextView lblTitleDialog;
+    EditText txtBeginDate;
+    EditText txtEndDate;
+    Button btnSearchSales;
+
+    private void viewDialogSearchOrder(){
+        AlertDialog.Builder builder =  new AlertDialog.Builder(ListOrderActivity.this);
+        LayoutInflater inflater =  getLayoutInflater();
+        final View view = inflater.inflate(R.layout.report_dialog, null);
+        builder.setView(view);
+        final AlertDialog dialog = builder.create();
+        dialog.show();
+        lblTitleDialog = view.findViewById(R.id.lblTitleDialog);
+        lblTitleDialog.setText("Seleccionar fechas de pedidos");
+        txtBeginDate =  view.findViewById(R.id.beginDate);
+        txtEndDate = view.findViewById(R.id.endDate);
+        btnSearchSales = view.findViewById(R.id.btnSearchSale);
+
+        txtBeginDate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showBeginDatePickerDialog();
+            }
+        });
+
+        txtEndDate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showEndDatePickerDialog();
+            }
+        });
+
+        btnSearchSales.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String beginDate = txtBeginDate.getText().toString();
+                String endDate = txtBeginDate.getText().toString();
+                if(!beginDate.isEmpty() && !endDate.isEmpty()) {
+                    getReportOrders();
+                    dialog.dismiss();
+                }else{
+                    MyToastMessage.error(ListOrderActivity.this, "Ingrese el rango de fechas");
+                }
+            }
+        });
+    }
+
+    /**
+     * Load begin date
+     */
+    private void showBeginDatePickerDialog() {
+        DatePickerFragment newFragment = DatePickerFragment.newInstance(new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                final String selectedDate = year + "-" + ((month+1) < 10 ? "0"+(month+1):""+(month+1)) + "-" + (dayOfMonth < 10 ? "0"+dayOfMonth:""+dayOfMonth);
+                txtBeginDate.setText(selectedDate);
+            }
+        });
+        newFragment.show(getSupportFragmentManager(), "datePicker");
+    }
+
+    /**
+     * Load end date
+     */
+    private void showEndDatePickerDialog() {
+        DatePickerFragment newFragment = DatePickerFragment.newInstance(new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                final String selectedDate = year + "-" + ((month+1) < 10 ? "0"+(month+1):""+(month+1)) + "-" + (dayOfMonth < 10 ? "0"+dayOfMonth:""+dayOfMonth);
+                txtEndDate.setText(selectedDate);
+            }
+        });
+        newFragment.show(getSupportFragmentManager(), "datePicker");
+    }
+
+    void getReportOrders(){
+        mDialog.show();
+        orderProvider.getListOrder().addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    listOrderReport = new ArrayList<>();
+                    for (final DataSnapshot invoiceNode: snapshot.getChildren()){
+                        String dateOrder = invoiceNode.child("Header").child("orderDate").getValue().toString();
+                        if(validateDateSale(dateOrder)){
+                            for (final DataSnapshot detailNode: invoiceNode.child("Details").getChildren()) {
+                                DetailOrder detailOrder = new DetailOrder();
+                                detailOrder.setId(detailNode.child("id").getValue().toString());
+                                detailOrder.setBarCodeItem(detailNode.child("barCodeItem").getValue().toString());
+                                detailOrder.setDescription(detailNode.child("description").getValue().toString());
+                                detailOrder.setQuantity(detailNode.child("quantity").getValue().toString());
+                                detailOrder.setSubTotal(detailNode.child("subTotal").getValue().toString());
+                                detailOrder.setUnitValue(detailNode.child("unitValue").getValue().toString());
+                                detailOrder.setExistsTax(detailNode.child("existsTax").getValue() != null ? detailNode.child("existsTax").getValue().toString() : null);
+                                detailOrder.setValueCatalogDriverUnit(detailNode.child("valueCatalogDriverUnit").getValue().toString());
+                                detailOrder.setValueDriverUnit(detailNode.child("valueDriverUnit").getValue().toString());
+                                addListOrders(detailOrder);
+                            }
+                        }
+                    }
+                    PrintManager printManager = (PrintManager)getSystemService(Context.PRINT_SERVICE);
+                    String jobName = getString(R.string.app_name)+" Document";
+                    printManager.print(jobName, new ReportOrderAdapter(getApplicationContext(), listOrderReport),null);
+                    mDialog.dismiss();
+                }else{
+                    lblListEmpty.setText("No existen facturas ingresadas");
+                    mDialog.dismiss();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
+    /**
+     * Method for validate the range dates
+     * @param orderDate The date of invoice
+     */
+    private boolean validateDateSale(String orderDate) {
+        boolean result = false;
+        try {
+            Date dateInvoiceFormat = new SimpleDateFormat("yyyy-MM-dd").parse(orderDate);
+            Calendar dateInvoiceCalendar = Calendar.getInstance();
+            dateInvoiceCalendar.setTime(dateInvoiceFormat);
+            Date beginDateFormat = new SimpleDateFormat("yyyy-MM-dd").parse(txtBeginDate.getText().toString());
+            Calendar beginDate = Calendar.getInstance();
+            beginDate.setTime(beginDateFormat);
+            beginDate.set(Calendar.HOUR_OF_DAY, 0);
+            beginDate.set(Calendar.MINUTE, 0);
+            beginDate.set(Calendar.SECOND, 0);
+            beginDate.set(Calendar.MILLISECOND, 0);
+            Date endDateFormat = new SimpleDateFormat("yyyy-MM-dd").parse(txtEndDate.getText().toString());
+            Calendar endDate = Calendar.getInstance();
+            endDate.setTime(endDateFormat);
+            endDate.set(Calendar.HOUR_OF_DAY, 23);
+            endDate.set(Calendar.MINUTE, 59);
+            endDate.set(Calendar.SECOND, 59);
+            endDate.set(Calendar.MILLISECOND, 59);
+            if(dateInvoiceCalendar.compareTo(beginDate) >= 0 && dateInvoiceCalendar.compareTo(endDate) <= 0) {
+                return true;
+            }
+        } catch (ParseException e) {
+            System.out.println(e.getMessage());
+        }
+        return result;
+    }
+
+    /**
+     * Add item or plus values if exists detail
+     * @param detailOrder The list of details added
+     */
+    void addListOrders(DetailOrder detailOrder){
+        boolean existItem = false;
+        for(DetailOrder detail: listOrderReport){
+            if(detail.getBarCodeItem().equals(detailOrder.getBarCodeItem()) && detail.getValueCatalogDriverUnit().equals(detailOrder.getValueCatalogDriverUnit()) && detail.getValueDriverUnit().equals(detailOrder.getValueDriverUnit())){
+                existItem = true;
+                int quantityItem = Integer.parseInt(detail.getQuantity());
+                int quantityNew = Integer.parseInt(detailOrder.getQuantity());
+                quantityItem = quantityItem + quantityNew;
+                detail.setQuantity(""+quantityItem);
+                double subTotalItem = Double.parseDouble(detail.getSubTotal());
+                double subTotalNew = Double.parseDouble(detailOrder.getSubTotal());
+                subTotalItem = subTotalItem + subTotalNew;
+                detail.setSubTotal(""+subTotalItem);
+                break;
+            }
+        }
+        if(!existItem){
+            listOrderReport.add(detailOrder);
+        }
     }
 }
