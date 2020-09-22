@@ -35,6 +35,7 @@ import java.util.List;
 
 import dmax.dialog.SpotsDialog;
 import ec.com.innovatech.mobileinvoice.R;
+import ec.com.innovatech.mobileinvoice.charges.InvoiceAdapter;
 import ec.com.innovatech.mobileinvoice.includes.MyToastMessage;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
 import ec.com.innovatech.mobileinvoice.models.DetailInvoice;
@@ -89,43 +90,32 @@ public class ListInvoiceActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
                     lblListEmpty.setText("");
+                    for (final DataSnapshot invoiceNode: snapshot.getChildren()){
+                        HeaderInvoice headerInvoice = new HeaderInvoice();
+                        headerInvoice.setTypeDocumentCode(invoiceNode.child("Header").child("typeDocumentCode").getValue().toString());
+                        headerInvoice.setTotalNotTax(invoiceNode.child("Header").child("totalNotTax").getValue().toString());
+                        headerInvoice.setTotalTax(invoiceNode.child("Header").child("totalTax").getValue().toString());
+                        headerInvoice.setTotalIva(invoiceNode.child("Header").child("totalIva").getValue().toString());
+                        headerInvoice.setSubTotal(invoiceNode.child("Header").child("subTotal").getValue().toString());
+                        headerInvoice.setTotalInvoice(invoiceNode.child("Header").child("totalInvoice").getValue().toString());
+                        headerInvoice.setPaidOut(invoiceNode.child("Header").child("paidOut").getValue().toString());
+                        headerInvoice.setDateDocument(invoiceNode.child("Header").child("dateDocument").getValue().toString());
+                        headerInvoice.setNumberDocument(invoiceNode.child("Header").child("numberDocument").getValue().toString());
+                        headerInvoice.setClientPhone(invoiceNode.child("Header").child("clientPhone").getValue().toString());
+                        headerInvoice.setClientDirection(invoiceNode.child("Header").child("clientDirection").getValue().toString());
+                        headerInvoice.setClientName(invoiceNode.child("Header").child("clientName").getValue().toString());
+                        headerInvoice.setClientDocument(invoiceNode.child("Header").child("clientDocument").getValue().toString());
+                        headerInvoice.setValueDocumentCode(invoiceNode.child("Header").child("valueDocumentCode").getValue().toString());
+                        headerInvoice.setUserId(invoiceNode.child("Header").child("userId").getValue() != null ? invoiceNode.child("Header").child("userId").getValue().toString() : null);
+                        headerInvoices.add(headerInvoice);
+                        addTotalInvoiceSaleDay(headerInvoice.getDateDocument(), headerInvoice.getTotalInvoice());
+                    }
                     String totalFormat = ValidationUtil.getTwoDecimal(totalValue);
                     lblTotalAccounts.setText(totalFormat);
                     lblNumberDocuments.setText(""+totalDocuments);
-                    for (final DataSnapshot invoiceNode: snapshot.getChildren()){
-                        invoiceProvider.getInvoice(invoiceNode.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                if(snapshot.exists()){
-                                    HeaderInvoice headerInvoice = new HeaderInvoice();
-                                    headerInvoice.setTypeDocumentCode(snapshot.child("typeDocumentCode").getValue().toString());
-                                    headerInvoice.setTotalNotTax(snapshot.child("totalNotTax").getValue().toString());
-                                    headerInvoice.setTotalTax(snapshot.child("totalTax").getValue().toString());
-                                    headerInvoice.setTotalIva(snapshot.child("totalIva").getValue().toString());
-                                    headerInvoice.setSubTotal(snapshot.child("subTotal").getValue().toString());
-                                    headerInvoice.setTotalInvoice(snapshot.child("totalInvoice").getValue().toString());
-                                    headerInvoice.setPaidOut(snapshot.child("paidOut").getValue().toString());
-                                    headerInvoice.setDateDocument(snapshot.child("dateDocument").getValue().toString());
-                                    headerInvoice.setNumberDocument(snapshot.child("numberDocument").getValue().toString());
-                                    headerInvoice.setClientPhone(snapshot.child("clientPhone").getValue().toString());
-                                    headerInvoice.setClientDirection(snapshot.child("clientDirection").getValue().toString());
-                                    headerInvoice.setClientName(snapshot.child("clientName").getValue().toString());
-                                    headerInvoice.setClientDocument(snapshot.child("clientDocument").getValue().toString());
-                                    headerInvoice.setValueDocumentCode(snapshot.child("valueDocumentCode").getValue().toString());
-                                    headerInvoice.setUserId(snapshot.child("valueDocumentCode").getValue() != null ? snapshot.child("valueDocumentCode").getValue().toString() : null);
-                                    headerInvoices.add(headerInvoice);
-                                    headerInvoiceAdapter = new HeaderInvoiceAdapter(getBaseContext(), headerInvoices);
-                                    listView.setAdapter(headerInvoiceAdapter);
-                                    addTotalInvoiceSaleDay(headerInvoice.getDateDocument(), headerInvoice.getTotalInvoice());
-                                }
-                                mDialog.dismiss();
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError error) {
-                            }
-                        });
-                    }
+                    headerInvoiceAdapter = new HeaderInvoiceAdapter(getBaseContext(), headerInvoices);
+                    listView.setAdapter(headerInvoiceAdapter);
+                    mDialog.dismiss();
                 }else{
                     lblListEmpty.setText("No existen facturas ingresadas");
                     mDialog.dismiss();

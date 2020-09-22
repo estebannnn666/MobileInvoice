@@ -89,43 +89,36 @@ public class ListOrderActivity extends AppCompatActivity {
         orderProvider.getListOrderSorted().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                String totalFormat = ValidationUtil.getTwoDecimal(totalValue);
-                lblTotalAccounts.setText(totalFormat);
+                String totalFormatZero = ValidationUtil.getTwoDecimal(totalValue);
+                lblTotalAccounts.setText(totalFormatZero);
                 lblNumberDocuments.setText(""+totalDocuments);
                 if(snapshot.exists()){
                     lblListEmpty.setText("");
                     for (final DataSnapshot invoiceNode: snapshot.getChildren()){
-                        orderProvider.getOrder(invoiceNode.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                if(snapshot.exists()){
-                                    HeaderOrder headerOrder = new HeaderOrder();
-                                    headerOrder.setIdOrder(snapshot.child("idOrder").getValue().toString());
-                                    headerOrder.setTotalNotTax(snapshot.child("totalNotTax").getValue().toString());
-                                    headerOrder.setTotalTax(snapshot.child("totalTax").getValue().toString());
-                                    headerOrder.setTotalIva(snapshot.child("totalIva").getValue().toString());
-                                    headerOrder.setSubTotal(snapshot.child("subTotal").getValue().toString());
-                                    headerOrder.setTotalInvoice(snapshot.child("totalInvoice").getValue().toString());
-                                    headerOrder.setOrderDate(snapshot.child("orderDate").getValue().toString());
-                                    headerOrder.setDeliveryDate(snapshot.child("deliveryDate").getValue().toString());
-                                    headerOrder.setClientPhone(snapshot.child("clientPhone").getValue().toString());
-                                    headerOrder.setClientDirection(snapshot.child("clientDirection").getValue().toString());
-                                    headerOrder.setClientName(snapshot.child("clientName").getValue().toString());
-                                    headerOrder.setClientDocument(snapshot.child("clientDocument").getValue().toString());
-                                    headerOrder.setStatusOrder(snapshot.child("statusOrder").getValue().toString());
-                                    headerOrders.add(headerOrder);
-                                    headerOrderAdapter = new HeaderOrderAdapter(getBaseContext(), headerOrders);
-                                    listView.setAdapter(headerOrderAdapter);
-                                    addTotalInvoiceSaleDay(headerOrder.getOrderDate(), headerOrder.getTotalInvoice());
-                                }
-                                mDialog.dismiss();
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError error) {
-                            }
-                        });
+                        HeaderOrder headerOrder = new HeaderOrder();
+                        headerOrder.setIdOrder(invoiceNode.child("Header").child("idOrder").getValue().toString());
+                        headerOrder.setTotalNotTax(invoiceNode.child("Header").child("totalNotTax").getValue().toString());
+                        headerOrder.setTotalTax(invoiceNode.child("Header").child("totalTax").getValue().toString());
+                        headerOrder.setTotalIva(invoiceNode.child("Header").child("totalIva").getValue().toString());
+                        headerOrder.setSubTotal(invoiceNode.child("Header").child("subTotal").getValue().toString());
+                        headerOrder.setTotalInvoice(invoiceNode.child("Header").child("totalInvoice").getValue().toString());
+                        headerOrder.setOrderDate(invoiceNode.child("Header").child("orderDate").getValue().toString());
+                        headerOrder.setDeliveryDate(invoiceNode.child("Header").child("deliveryDate").getValue().toString());
+                        headerOrder.setClientPhone(invoiceNode.child("Header").child("clientPhone").getValue().toString());
+                        headerOrder.setClientDirection(invoiceNode.child("Header").child("clientDirection").getValue().toString());
+                        headerOrder.setClientName(invoiceNode.child("Header").child("clientName").getValue().toString());
+                        headerOrder.setClientDocument(invoiceNode.child("Header").child("clientDocument").getValue().toString());
+                        headerOrder.setStatusOrder(invoiceNode.child("Header").child("statusOrder").getValue().toString());
+                        headerOrder.setUserId(invoiceNode.child("Header").child("userId").getValue().toString());
+                        headerOrders.add(headerOrder);
+                        addTotalInvoiceSaleDay(headerOrder.getOrderDate(), headerOrder.getTotalInvoice());
                     }
+                    headerOrderAdapter = new HeaderOrderAdapter(getBaseContext(), headerOrders);
+                    listView.setAdapter(headerOrderAdapter);
+                    String totalFormat = ValidationUtil.getTwoDecimal(totalValue);
+                    lblTotalAccounts.setText(totalFormat);
+                    lblNumberDocuments.setText("" + totalDocuments);
+                    mDialog.dismiss();
                 }else{
                     lblListEmpty.setText("No existen pedidos ingresados");
                     mDialog.dismiss();
@@ -162,9 +155,6 @@ public class ListOrderActivity extends AppCompatActivity {
             if(dateInvoiceCalendar.compareTo(dataBegin) >= 0 && dateInvoiceCalendar.compareTo(dataEnd) <= 0) {
                 totalValue = totalValue + Double.parseDouble(totalInvoice);
                 totalDocuments++;
-                String totalFormat = ValidationUtil.getTwoDecimal(totalValue);
-                lblTotalAccounts.setText(totalFormat);
-                lblNumberDocuments.setText("" + totalDocuments);
             }
         } catch (ParseException e) {
             System.out.println(e.getMessage());

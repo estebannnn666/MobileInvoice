@@ -70,38 +70,26 @@ public class ListItemActivity extends AppCompatActivity {
     }
 
     public void loadDataItems(){
+        mDialog.show();
         itemProvider.getListItems().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
                     lblListEmpty.setText("");
-                    mDialog.show();
                     for (final DataSnapshot itemNode: snapshot.getChildren()){
-                        itemProvider.getItem(itemNode.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                if(snapshot.exists()){
-                                    Item item = new Item();
-                                    item.setBarCode(snapshot.child("barCode").getValue().toString());
-                                    item.setNameItem(snapshot.child("nameItem").getValue().toString());
-                                    item.setCost(snapshot.child("cost").getValue().toString());
-                                    item.setPriceRetail(snapshot.child("priceRetail").getValue().toString());
-                                    item.setPriceWholesaler(snapshot.child("priceWholesaler").getValue().toString());
-                                    item.setCommissionPercentage(snapshot.child("commissionPercentage").getValue().toString());
-                                    item.setStock(snapshot.child("stock").getValue().toString());
-                                    listItems.add(item);
-                                    itemAdapter = new ItemAdapter(getBaseContext(), listItems);
-                                    listView.setAdapter(itemAdapter);
-                                }
-                                mDialog.dismiss();
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError error) {
-
-                            }
-                        });
+                        Item item = new Item();
+                        item.setBarCode(itemNode.child("DataItem").child("barCode").getValue().toString());
+                        item.setNameItem(itemNode.child("DataItem").child("nameItem").getValue().toString());
+                        item.setCost(itemNode.child("DataItem").child("cost").getValue().toString());
+                        item.setPriceRetail(itemNode.child("DataItem").child("priceRetail").getValue().toString());
+                        item.setPriceWholesaler(itemNode.child("DataItem").child("priceWholesaler").getValue().toString());
+                        item.setCommissionPercentage(itemNode.child("DataItem").child("commissionPercentage").getValue().toString());
+                        item.setStock(itemNode.child("DataItem").child("stock").getValue().toString());
+                        listItems.add(item);
                     }
+                    itemAdapter = new ItemAdapter(getBaseContext(), listItems);
+                    listView.setAdapter(itemAdapter);
+                    mDialog.dismiss();
                 }else{
                     lblListEmpty.setText("No existen artículos configurados");
                     mDialog.dismiss();

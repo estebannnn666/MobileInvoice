@@ -143,16 +143,17 @@ public class ListChargesActivity extends AppCompatActivity {
                             headerInvoice.setClientName(invoiceNode.child("Header").child("clientName").getValue().toString());
                             headerInvoice.setClientDocument(invoiceNode.child("Header").child("clientDocument").getValue().toString());
                             headerInvoice.setValueDocumentCode(invoiceNode.child("Header").child("valueDocumentCode").getValue().toString());
+                            headerInvoice.setUserId(invoiceNode.child("Header").child("userId").getValue() != null ? invoiceNode.child("Header").child("userId").getValue().toString() : null);
                             headerInvoices.add(headerInvoice);
-                            invoiceAdapter = new InvoiceAdapter(getBaseContext(), headerInvoices);
-                            listView.setAdapter(invoiceAdapter);
                             totalValue = totalValue + Double.parseDouble(headerInvoice.getTotalInvoice());
                             totalDocuments++;
-                            String totalFormat = ValidationUtil.getTwoDecimal(totalValue);
-                            lblTotalAccounts.setText(totalFormat);
-                            lblNumberDocuments.setText(""+totalDocuments);
                         }
                     }
+                    invoiceAdapter = new InvoiceAdapter(getBaseContext(), headerInvoices);
+                    listView.setAdapter(invoiceAdapter);
+                    String totalFormat = ValidationUtil.getTwoDecimal(totalValue);
+                    lblTotalAccounts.setText(totalFormat);
+                    lblNumberDocuments.setText(""+totalDocuments);
                     mDialog.dismiss();
                 }else{
                     lblListEmpty.setText("No existen facturas pendientes de cobro");

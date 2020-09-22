@@ -67,32 +67,20 @@ public class ListClientActivity extends AppCompatActivity {
                 if(snapshot.exists()){
                     lblListEmpty.setText("");
                     for (final DataSnapshot clientNode: snapshot.getChildren()){
-                        clientProvider.getClient(clientNode.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                if(snapshot.exists()){
-                                    Client client = new Client();
-                                    client.setBuyType(snapshot.child("buyType").getValue().toString());
-                                    client.setType(snapshot.child("type").getValue().toString());
-                                    client.setDocument(snapshot.child("document").getValue().toString());
-                                    client.setName(snapshot.child("name").getValue().toString());
-                                    client.setAddress(snapshot.child("address").getValue().toString());
-                                    client.setCity(snapshot.child("city").getValue().toString());
-                                    client.setTelephone(snapshot.child("telephone").getValue().toString());
-                                    client.setEmail(snapshot.child("email").getValue().toString());
-                                    listClients.add(client);
-                                    clientAdapter = new ClientAdapter(ListClientActivity.this, getBaseContext(), listClients);
-                                    listView.setAdapter(clientAdapter);
-                                }
-                                mDialog.dismiss();
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError error) {
-
-                            }
-                        });
+                        Client client = new Client();
+                        client.setBuyType(clientNode.child("buyType").getValue().toString());
+                        client.setType(clientNode.child("type").getValue().toString());
+                        client.setDocument(clientNode.child("document").getValue().toString());
+                        client.setName(clientNode.child("name").getValue().toString());
+                        client.setAddress(clientNode.child("address").getValue().toString());
+                        client.setCity(clientNode.child("city").getValue().toString());
+                        client.setTelephone(clientNode.child("telephone").getValue().toString());
+                        client.setEmail(clientNode.child("email").getValue().toString());
+                        listClients.add(client);
                     }
+                    clientAdapter = new ClientAdapter(ListClientActivity.this, getBaseContext(), listClients);
+                    listView.setAdapter(clientAdapter);
+                    mDialog.dismiss();
                 }else{
                     lblListEmpty.setText("No existen clientes configurados");
                     mDialog.dismiss();

@@ -20,6 +20,7 @@
         <TextView
             android:layout_gravity="center"
             android:textAlignment="center"
+            android:layout_marginTop="225dp"
             android:id="@+id/txtInvoiceChargeEmpty"
             android:layout_width="match_parent"
             android:textColor="#000000"
@@ -53,7 +54,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
-                android:text="3566.67"
+                android:text="0.00"
                 android:textSize="16sp"
                 android:textColor="@color/colorWhite"/>
         </LinearLayout>
@@ -74,7 +75,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
-                android:text="3566.67"
+                android:text="0"
                 android:textSize="16sp"
                 android:textColor="@color/colorWhite"/>
         </LinearLayout>
