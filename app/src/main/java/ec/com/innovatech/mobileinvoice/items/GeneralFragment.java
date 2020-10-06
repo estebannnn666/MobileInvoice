@@ -21,6 +21,9 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 
 import dmax.dialog.SpotsDialog;
 import ec.com.innovatech.mobileinvoice.R;
@@ -28,6 +31,7 @@ import ec.com.innovatech.mobileinvoice.includes.MyToastMessage;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
 import ec.com.innovatech.mobileinvoice.models.Item;
 import ec.com.innovatech.mobileinvoice.providers.ItemProvider;
+import ec.com.innovatech.mobileinvoice.providers.SequenceProvider;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -35,6 +39,7 @@ import ec.com.innovatech.mobileinvoice.providers.ItemProvider;
  */
 public class GeneralFragment extends Fragment {
 
+    SequenceProvider sequenceProvider;
     ItemProvider itemProvider;
     AlertDialog mDialog;
     TextInputEditText txtBarcode;
@@ -47,6 +52,8 @@ public class GeneralFragment extends Fragment {
     Button btnSaveItem;
     SharedPreferences mPref;
     SharedPreferences.Editor editor;
+    private int sequenceItem;
+    private boolean updateSequence;
 
     public GeneralFragment() {
         // Required empty public constructor
@@ -60,6 +67,7 @@ public class GeneralFragment extends Fragment {
         editor = mPref.edit();
         mDialog = new SpotsDialog.Builder().setContext(getActivity()).setMessage("Espere un momento").build();
         itemProvider = new ItemProvider();
+        sequenceProvider = new SequenceProvider();
         txtBarcode = root.findViewById(R.id.txtBarCode);
         txtItemName = root.findViewById(R.id.txtItemName);
         txtCost = root.findViewById(R.id.txtCost);
@@ -68,12 +76,12 @@ public class GeneralFragment extends Fragment {
         txtStock = root.findViewById(R.id.txtStock);
         btnSaveItem = root.findViewById(R.id.btnSaveItem);
         txtCommissionPercentage = root.findViewById(R.id.txtPercentage);
-
         Bundle resourceBundle = getActivity().getIntent().getExtras();
         if(resourceBundle != null){
+            updateSequence = Boolean.FALSE;
             Item itemEdit = (Item)resourceBundle.getSerializable("ITEM_SELECT");
             if(itemEdit != null) {
-                editor.putString("barcode", itemEdit.getBarCode());
+                editor.putString("barcode", ""+itemEdit.getId());
                 editor.apply();
                 txtBarcode.setText(itemEdit.getBarCode());
                 txtItemName.setText(itemEdit.getNameItem());
@@ -82,8 +90,12 @@ public class GeneralFragment extends Fragment {
                 txtPriceRetail.setText(itemEdit.getPriceRetail());
                 txtStock.setText(itemEdit.getStock());
                 txtCommissionPercentage.setText(itemEdit.getCommissionPercentage());
+                sequenceItem = itemEdit.getId();
                 MyToolBar.show((AppCompatActivity) getActivity(),"Editar artículo", true);
             }
+        }else{
+            getSequence();
+            updateSequence = Boolean.TRUE;
         }
 
         btnSaveItem.setOnClickListener(new View.OnClickListener() {
@@ -96,6 +108,7 @@ public class GeneralFragment extends Fragment {
     }
 
     private void saveItem(){
+        mDialog.show();
         final String barcode = txtBarcode.getText().toString();
         final String itemName = txtItemName.getText().toString();
         final String cost = txtCost.getText().toString();
@@ -106,16 +119,17 @@ public class GeneralFragment extends Fragment {
 
         if(!barcode.isEmpty() && !itemName.isEmpty() && !cost.isEmpty() && !priceWholesaler.isEmpty() && !priceRetail.isEmpty() && !stock.isEmpty() && !commissionPercentage.isEmpty()){
             if(barcode.length() <= 10){
-                mDialog.show();
-                Item item = new Item(barcode, itemName, cost, priceWholesaler, priceRetail, stock, commissionPercentage);
-                editor.putString("barcode", barcode);
+                Item item = new Item(sequenceItem, barcode, itemName, cost, priceWholesaler, priceRetail, stock, commissionPercentage);
+                editor.putString("barcode", ""+sequenceItem);
                 editor.apply();
                 create(item);
             }  else{
                 MyToastMessage.error((AppCompatActivity) getActivity(), "El código de barras debe tener de 1 a 10 caracteres numéricos");
+                mDialog.dismiss();
             }
         }else{
             MyToastMessage.error((AppCompatActivity) getActivity(), "Ingrese todos los campos requeridos");
+            mDialog.dismiss();
         }
     }
 
@@ -124,11 +138,49 @@ public class GeneralFragment extends Fragment {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
             if (task.isSuccessful()) {
-                mDialog.hide();
-                MyToastMessage.susses((AppCompatActivity) getActivity(), "Los datos se guardaron correctamente");
+                if(updateSequence) {
+                    sequenceItem++;
+                    updateSequence(sequenceItem);
+                }else{
+                    MyToastMessage.susses((AppCompatActivity) getActivity(), "Los datos se guardaron correctamente");
+                    mDialog.dismiss();
+                }
             } else {
                 MyToastMessage.error((AppCompatActivity) getActivity(), "No se pudo crear el artículo");
+                mDialog.dismiss();
             }
+            }
+        });
+    }
+
+    private void updateSequence(int numberSequence){
+        sequenceProvider.createUpdateSequence("item", ""+numberSequence).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    MyToastMessage.susses((AppCompatActivity) getActivity(), "Los datos se guardaron correctamente");
+                    mDialog.dismiss();
+                } else {
+                    MyToastMessage.error((AppCompatActivity) getActivity(), "Error al actualizar secuencia");
+                    mDialog.dismiss();
+                }
+            }
+        });
+    }
+
+    void getSequence() {
+        sequenceProvider.getSequence("item").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                final int[] sequence = {0};
+                if(snapshot.exists()){
+                    sequence[0] = Integer.parseInt(snapshot.getValue().toString());
+                }
+                sequenceItem = sequence[0];
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
             }
         });
     }

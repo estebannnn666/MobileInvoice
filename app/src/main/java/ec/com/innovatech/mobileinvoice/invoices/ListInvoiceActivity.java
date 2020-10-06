@@ -92,11 +92,13 @@ public class ListInvoiceActivity extends AppCompatActivity {
                     lblListEmpty.setText("");
                     for (final DataSnapshot invoiceNode: snapshot.getChildren()){
                         HeaderInvoice headerInvoice = new HeaderInvoice();
+                        headerInvoice.setIdInvoice(Integer.parseInt(invoiceNode.child("Header").child("idInvoice").getValue().toString()));
                         headerInvoice.setTypeDocumentCode(invoiceNode.child("Header").child("typeDocumentCode").getValue().toString());
                         headerInvoice.setTotalNotTax(invoiceNode.child("Header").child("totalNotTax").getValue().toString());
                         headerInvoice.setTotalTax(invoiceNode.child("Header").child("totalTax").getValue().toString());
                         headerInvoice.setTotalIva(invoiceNode.child("Header").child("totalIva").getValue().toString());
                         headerInvoice.setSubTotal(invoiceNode.child("Header").child("subTotal").getValue().toString());
+                        headerInvoice.setDiscount(invoiceNode.child("Header").child("discount").getValue().toString());
                         headerInvoice.setTotalInvoice(invoiceNode.child("Header").child("totalInvoice").getValue().toString());
                         headerInvoice.setPaidOut(invoiceNode.child("Header").child("paidOut").getValue().toString());
                         headerInvoice.setDateDocument(invoiceNode.child("Header").child("dateDocument").getValue().toString());
@@ -279,7 +281,7 @@ public class ListInvoiceActivity extends AppCompatActivity {
                         if(validateDateSale(dateInvoice)){
                             for (final DataSnapshot detailNode: invoiceNode.child("Details").getChildren()) {
                                 DetailInvoice detailInvoice = new DetailInvoice();
-                                detailInvoice.setId(detailNode.child("id").getValue().toString());
+                                detailInvoice.setIdItem(Integer.parseInt(detailNode.child("idItem").getValue().toString()));
                                 detailInvoice.setBarCodeItem(detailNode.child("barCodeItem").getValue().toString());
                                 detailInvoice.setDescription(detailNode.child("description").getValue().toString());
                                 detailInvoice.setNumberDocument(detailNode.child("numberDocument").getValue().toString());

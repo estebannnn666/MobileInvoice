@@ -168,7 +168,7 @@
                 android:id="@+id/listDetailInvoice"
                 android:background="@drawable/border_shape"
                 android:layout_width="wrap_content"
-                android:layout_height="235dp" />
+                android:layout_height="220dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -186,6 +186,33 @@
                     android:text="Sub total:" />
                 <TextView
                     android:id="@+id/lblSubTotalFac"
+                    android:gravity="right"
+                    android:layout_marginTop="1dp"
+                    android:layout_marginBottom="1dp"
+                    android:layout_marginRight="15dp"
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:textColor="#000000"
+                    android:textSize="11dp"
+                    android:textStyle="bold"
+                    android:text="0.00" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="right">
+                <TextView
+                    android:layout_marginTop="1dp"
+                    android:layout_marginBottom="1dp"
+                    android:layout_width="90dp"
+                    android:layout_height="wrap_content"
+                    android:textColor="#000000"
+                    android:textSize="11dp"
+                    android:textStyle="bold"
+                    android:text="Descuento:" />
+                <TextView
+                    android:id="@+id/lblDiscountFac"
                     android:gravity="right"
                     android:layout_marginTop="1dp"
                     android:layout_marginBottom="1dp"

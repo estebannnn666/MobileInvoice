@@ -3,6 +3,7 @@ package ec.com.innovatech.mobileinvoice.providers;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 
 import ec.com.innovatech.mobileinvoice.models.Enterprise;
 
@@ -18,8 +19,8 @@ public class EnterpriseProvider {
         return mDataBase.child(enterprise.getRuc()).setValue(enterprise);
     }
 
-    public DatabaseReference getListEnterprise(){
-        return mDataBase;
+    public Query getListEnterprise(){
+        return mDataBase.orderByChild("ruc");
     }
 
     public DatabaseReference getEnterprise(String ruc){

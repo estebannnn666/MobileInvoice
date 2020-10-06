@@ -10,15 +10,16 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 
+import ec.com.innovatech.mobileinvoice.cash.ListTransactionActivity;
 import ec.com.innovatech.mobileinvoice.charges.ListChargesActivity;
 import ec.com.innovatech.mobileinvoice.clients.ListClientActivity;
 import ec.com.innovatech.mobileinvoice.enterprise.EnterpriseActivity;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
-import ec.com.innovatech.mobileinvoice.invoices.InvoiceActivity;
 import ec.com.innovatech.mobileinvoice.invoices.ListInvoiceActivity;
 import ec.com.innovatech.mobileinvoice.items.ListItemActivity;
 import ec.com.innovatech.mobileinvoice.orders.ListOrderActivity;
 import ec.com.innovatech.mobileinvoice.providers.AuthProviders;
+import ec.com.innovatech.mobileinvoice.user.ListUserActivity;
 
 public class MenuActivity extends AppCompatActivity {
 
@@ -29,6 +30,8 @@ public class MenuActivity extends AppCompatActivity {
     ImageView accounts;
     ImageView configuration;
     ImageView preSale;
+    ImageView transaction;
+    ImageView users;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +45,8 @@ public class MenuActivity extends AppCompatActivity {
         accounts = findViewById(R.id.imgAccounts);
         configuration = findViewById(R.id.imgConfiguration);
         preSale = findViewById(R.id.imgPreSale);
+        transaction = findViewById(R.id.imgTransaction);
+        users = findViewById(R.id.imgUsers);
 
 
         // Go to page if clients
@@ -94,6 +99,23 @@ public class MenuActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MenuActivity.this, ListOrderActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        // Go to page if select transactions
+        transaction.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MenuActivity.this, ListTransactionActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        users.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MenuActivity.this, ListUserActivity.class);
                 startActivity(intent);
             }
         });

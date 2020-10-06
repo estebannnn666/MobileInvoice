@@ -1,7 +1,7 @@
 package ec.com.innovatech.mobileinvoice.models;
 
 public class DetailOrder {
-    private String id;
+    private Integer idItem;
     private String barCodeItem ;
     private String valueCatalogDriverUnit ;
     private String valueDriverUnit ;
@@ -9,12 +9,13 @@ public class DetailOrder {
     private String description ;
     private String unitValue ;
     private String subTotal ;
+    private String discount;
     private String existsTax ;
 
     public DetailOrder(){
     }
-    public DetailOrder(String id, String barCodeItem, String valueCatalogDriverUnit, String valueDriverUnit, String quantity, String description, String unitValue, String subTotal, String existsTax){
-        this.id = id;
+    public DetailOrder(Integer idItem, String barCodeItem, String valueCatalogDriverUnit, String valueDriverUnit, String quantity, String description, String unitValue, String subTotal, String discount, String existsTax){
+        this.idItem = idItem;
         this.barCodeItem = barCodeItem;
         this.valueCatalogDriverUnit = valueCatalogDriverUnit;
         this.valueDriverUnit = valueDriverUnit;
@@ -22,15 +23,16 @@ public class DetailOrder {
         this.description = description;
         this.unitValue = unitValue;
         this.subTotal = subTotal;
+        this.discount = discount;
         this.existsTax = existsTax;
     }
 
-    public String getId() {
-        return id;
+    public Integer getIdItem() {
+        return idItem;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setIdItem(Integer idItem) {
+        this.idItem = idItem;
     }
 
     public String getBarCodeItem() {
@@ -91,6 +93,14 @@ public class DetailOrder {
 
     public String getExistsTax() {
         return existsTax;
+    }
+
+    public String getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(String discount) {
+        this.discount = discount;
     }
 
     public void setExistsTax(String existsTax) {

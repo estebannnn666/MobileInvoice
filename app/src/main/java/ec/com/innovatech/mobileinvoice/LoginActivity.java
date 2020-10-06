@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -25,10 +26,13 @@ import com.google.firebase.database.ValueEventListener;
 import ec.com.innovatech.mobileinvoice.enterprise.EnterpriseActivity;
 import ec.com.innovatech.mobileinvoice.includes.MyToastMessage;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
+import ec.com.innovatech.mobileinvoice.models.Enterprise;
 import ec.com.innovatech.mobileinvoice.providers.EnterpriseProvider;
 
 public class LoginActivity extends AppCompatActivity {
 
+    SharedPreferences mPref;
+    SharedPreferences.Editor enterpriseSession;
     TextInputEditText textInputEmail;
     TextInputEditText textInputPassword;
     Button buttonLogin;
@@ -44,7 +48,8 @@ public class LoginActivity extends AppCompatActivity {
         MyToolBar.show(this,"Login", true);
         alertDialog =  new SpotsDialog.Builder().setContext(LoginActivity.this).setMessage("Espere un momento").build();
         enterpriseProvider = new EnterpriseProvider();
-
+        mPref = getApplicationContext().getSharedPreferences("enterprise", MODE_PRIVATE);
+        enterpriseSession = mPref.edit();
         textInputEmail = findViewById(R.id.txtInputEmail);
         textInputPassword = findViewById(R.id.txtInputPassword);
         buttonLogin = findViewById(R.id.bottomLogin);
@@ -74,6 +79,16 @@ public class LoginActivity extends AppCompatActivity {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                                     if (snapshot.exists()) {
+                                        for (final DataSnapshot enterpriseNode: snapshot.getChildren()){
+                                            enterpriseSession.putString("address", enterpriseNode.child("address").getValue().toString());
+                                            enterpriseSession.putString("city", enterpriseNode.child("city").getValue().toString());
+                                            enterpriseSession.putString("country", enterpriseNode.child("country").getValue().toString());
+                                            enterpriseSession.putString("name", enterpriseNode.child("name").getValue().toString());
+                                            enterpriseSession.putString("ruc", enterpriseNode.child("ruc").getValue().toString());
+                                            enterpriseSession.putString("telephone", enterpriseNode.child("telephone").getValue().toString());
+                                            enterpriseSession.apply();
+                                            break;
+                                        }
                                         Intent intent = new Intent(LoginActivity.this, MenuActivity.class);
                                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                         startActivity(intent);

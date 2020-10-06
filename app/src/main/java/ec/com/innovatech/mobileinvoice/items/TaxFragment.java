@@ -89,7 +89,7 @@ public class TaxFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if(listTaxes.size() > 0) {
-                    int cont = 1;
+                    int cont = 0;
                     for (Tax tax : listTaxes) {
                         mDialog.show();
                         tax.setId(""+cont);

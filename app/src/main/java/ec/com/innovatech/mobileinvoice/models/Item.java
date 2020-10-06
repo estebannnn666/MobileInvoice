@@ -3,6 +3,7 @@ package ec.com.innovatech.mobileinvoice.models;
 import java.io.Serializable;
 
 public class Item implements Serializable {
+    private Integer id;
     private String barCode;
     private String nameItem;
     private String cost;
@@ -15,7 +16,8 @@ public class Item implements Serializable {
     public Item(){
     }
 
-    public Item(String barCode, String nameItem, String cost, String priceWholesaler, String priceRetail, String stock, String commissionPercentage){
+    public Item(Integer id, String barCode, String nameItem, String cost, String priceWholesaler, String priceRetail, String stock, String commissionPercentage){
+        this.id = id;
         this.barCode = barCode;
         this.nameItem = nameItem;
         this.cost = cost;
@@ -23,6 +25,14 @@ public class Item implements Serializable {
         this.priceRetail = priceRetail;
         this.stock = stock;
         this.commissionPercentage = commissionPercentage;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getBarCode() {

@@ -96,9 +96,10 @@ public class ListOrderActivity extends AppCompatActivity {
                     lblListEmpty.setText("");
                     for (final DataSnapshot invoiceNode: snapshot.getChildren()){
                         HeaderOrder headerOrder = new HeaderOrder();
-                        headerOrder.setIdOrder(invoiceNode.child("Header").child("idOrder").getValue().toString());
+                        headerOrder.setIdOrder(Integer.parseInt(invoiceNode.child("Header").child("idOrder").getValue().toString()));
                         headerOrder.setTotalNotTax(invoiceNode.child("Header").child("totalNotTax").getValue().toString());
                         headerOrder.setTotalTax(invoiceNode.child("Header").child("totalTax").getValue().toString());
+                        headerOrder.setDiscount(invoiceNode.child("Header").child("discount").getValue().toString());
                         headerOrder.setTotalIva(invoiceNode.child("Header").child("totalIva").getValue().toString());
                         headerOrder.setSubTotal(invoiceNode.child("Header").child("subTotal").getValue().toString());
                         headerOrder.setTotalInvoice(invoiceNode.child("Header").child("totalInvoice").getValue().toString());
@@ -111,7 +112,10 @@ public class ListOrderActivity extends AppCompatActivity {
                         headerOrder.setStatusOrder(invoiceNode.child("Header").child("statusOrder").getValue().toString());
                         headerOrder.setUserId(invoiceNode.child("Header").child("userId").getValue().toString());
                         headerOrders.add(headerOrder);
-                        addTotalInvoiceSaleDay(headerOrder.getOrderDate(), headerOrder.getTotalInvoice());
+                        String statusOrder = invoiceNode.child("Header").child("statusOrder").getValue().toString();
+                        if(!statusOrder.equals("CANCELADO")){
+                            addTotalInvoiceSaleDay(headerOrder.getOrderDate(), headerOrder.getTotalInvoice());
+                        }
                     }
                     headerOrderAdapter = new HeaderOrderAdapter(getBaseContext(), headerOrders);
                     listView.setAdapter(headerOrderAdapter);
@@ -278,10 +282,11 @@ public class ListOrderActivity extends AppCompatActivity {
                     listOrderReport = new ArrayList<>();
                     for (final DataSnapshot invoiceNode: snapshot.getChildren()){
                         String dateOrder = invoiceNode.child("Header").child("orderDate").getValue().toString();
-                        if(validateDateSale(dateOrder)){
+                        String statusOrder = invoiceNode.child("Header").child("statusOrder").getValue().toString();
+                        if(validateDateSale(dateOrder) && !statusOrder.equals("CANCELADO")){
                             for (final DataSnapshot detailNode: invoiceNode.child("Details").getChildren()) {
                                 DetailOrder detailOrder = new DetailOrder();
-                                detailOrder.setId(detailNode.child("id").getValue().toString());
+                                detailOrder.setIdItem(Integer.parseInt(detailNode.child("idItem").getValue().toString()));
                                 detailOrder.setBarCodeItem(detailNode.child("barCodeItem").getValue().toString());
                                 detailOrder.setDescription(detailNode.child("description").getValue().toString());
                                 detailOrder.setQuantity(detailNode.child("quantity").getValue().toString());

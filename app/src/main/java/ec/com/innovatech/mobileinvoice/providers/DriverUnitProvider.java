@@ -22,8 +22,8 @@ public class DriverUnitProvider {
         return mDataBase.child(barCode).child("DriveUnit").child(driveUnit.getId()).removeValue();
     }
 
-    public DatabaseReference getListDriveUnit(String barCode){
-        return mDataBase.child(barCode).child("DriveUnit");
+    public DatabaseReference getListDriveUnit(String idItem){
+        return mDataBase.child(idItem).child("DriveUnit");
     }
 
     public DatabaseReference getDriveUnit(String barCode, String id){

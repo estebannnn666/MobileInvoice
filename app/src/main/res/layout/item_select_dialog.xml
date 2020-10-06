@@ -194,6 +194,21 @@
             android:textColorHint="#2553A9"
             android:textColor="#27ADA5"
             android:inputType="number" />
+        <EditText
+            android:id="@+id/txtAddPrice"
+            android:layout_marginTop="8dp"
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/style_text"
+            android:drawablePadding="10dp"
+            android:textSize="14dp"
+            android:drawableLeft="@drawable/icon_price_unit"
+            android:hint="@string/invoice_price_unit"
+            android:textColorHint="#2553A9"
+            android:textColor="#27ADA5"
+            android:inputType="numberDecimal" />
 
         <EditText
             android:id="@+id/txtSubTotal"

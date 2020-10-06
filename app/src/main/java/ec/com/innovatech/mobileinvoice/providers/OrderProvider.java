@@ -21,15 +21,15 @@ public class OrderProvider {
     }
 
     public Task<Void> createHeaderOrder(HeaderOrder headerOrder){
-        return mDataBase.child(headerOrder.getIdOrder()).child("Header").setValue(headerOrder);
+        return mDataBase.child(""+headerOrder.getIdOrder()).child("Header").setValue(headerOrder);
     }
 
     public Task<Void> createDetailsOrder(String idOrder, List<DetailOrder> detailOrders){
         return mDataBase.child(idOrder).child("Details").setValue(detailOrders);
     }
 
-    public Task<Void> updateStatusOrder(String idOrder, String statusOrder){
-        return mDataBase.child(idOrder).child("Header").child("statusOrder").setValue(statusOrder);
+    public Task<Void> updateStatusOrder(Integer idOrder, String statusOrder){
+        return mDataBase.child(String.valueOf(idOrder)).child("Header").child("statusOrder").setValue(statusOrder);
     }
 
     public DatabaseReference getListOrder(){
@@ -44,12 +44,12 @@ public class OrderProvider {
         return mDataBase.child(idOrder).child("Header");
     }
 
-    public DatabaseReference getListDetailsOrder(String idOrder){
-        return mDataBase.child(idOrder).child("Details");
+    public DatabaseReference getListDetailsOrder(Integer idOrder){
+        return mDataBase.child(String.valueOf(idOrder)).child("Details");
     }
 
-    public DatabaseReference getDetailOrder(String idOrder, String id){
-        return mDataBase.child(idOrder).child("Details").child(id);
+    public DatabaseReference getDetailOrder(Integer idOrder, String id){
+        return mDataBase.child(String.valueOf(idOrder)).child("Details").child(id);
     }
 
     public Task<Void> deleteOrder(String idOrder){

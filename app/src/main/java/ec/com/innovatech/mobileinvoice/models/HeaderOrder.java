@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class HeaderOrder implements Serializable {
 
-    private String idOrder ;
+    private Integer idOrder ;
     private String orderDate ;
     private String deliveryDate ;
     private String statusOrder ;
@@ -20,8 +20,8 @@ public class HeaderOrder implements Serializable {
     private String totalInvoice ;
     private String userId;
 
-    public HeaderOrder(String numberDocument, String orderDate, String deliveryDate, String statusOrder, String clientDocument, String clientName, String clientDirection, String clientPhone, String discount, String totalNotTax, String totalTax, String totalIva, String subTotal, String totalInvoice, String userId){
-        this.idOrder = numberDocument;
+    public HeaderOrder(Integer idOrder, String orderDate, String deliveryDate, String statusOrder, String clientDocument, String clientName, String clientDirection, String clientPhone, String discount, String totalNotTax, String totalTax, String totalIva, String subTotal, String totalInvoice, String userId){
+        this.idOrder = idOrder;
         this.orderDate = orderDate;
         this.deliveryDate = deliveryDate;
         this.statusOrder = statusOrder;
@@ -41,11 +41,11 @@ public class HeaderOrder implements Serializable {
     public HeaderOrder(){
     }
 
-    public String getIdOrder() {
+    public Integer getIdOrder() {
         return idOrder;
     }
 
-    public void setIdOrder(String idOrder) {
+    public void setIdOrder(Integer idOrder) {
         this.idOrder = idOrder;
     }
 

@@ -71,13 +71,14 @@ public class ListItemActivity extends AppCompatActivity {
 
     public void loadDataItems(){
         mDialog.show();
-        itemProvider.getListItems().addListenerForSingleValueEvent(new ValueEventListener() {
+        itemProvider.getListItemsSorted().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
                     lblListEmpty.setText("");
                     for (final DataSnapshot itemNode: snapshot.getChildren()){
                         Item item = new Item();
+                        item.setId(Integer.parseInt(itemNode.child("DataItem").child("id").getValue().toString()));
                         item.setBarCode(itemNode.child("DataItem").child("barCode").getValue().toString());
                         item.setNameItem(itemNode.child("DataItem").child("nameItem").getValue().toString());
                         item.setCost(itemNode.child("DataItem").child("cost").getValue().toString());

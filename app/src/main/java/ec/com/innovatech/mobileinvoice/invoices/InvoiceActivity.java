@@ -8,12 +8,10 @@ import android.app.DatePickerDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.print.PrintManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -43,38 +41,39 @@ import com.google.firebase.database.ValueEventListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import dmax.dialog.SpotsDialog;
-import ec.com.innovatech.mobileinvoice.MenuActivity;
 import ec.com.innovatech.mobileinvoice.R;
-import ec.com.innovatech.mobileinvoice.RegisterActivity;
-import ec.com.innovatech.mobileinvoice.clients.ClientAdapter;
-import ec.com.innovatech.mobileinvoice.enterprise.EnterpriseActivity;
 import ec.com.innovatech.mobileinvoice.includes.MyToastMessage;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
 import ec.com.innovatech.mobileinvoice.models.Client;
 import ec.com.innovatech.mobileinvoice.models.DetailInvoice;
-import ec.com.innovatech.mobileinvoice.models.DetailOrder;
 import ec.com.innovatech.mobileinvoice.models.DriveUnit;
 import ec.com.innovatech.mobileinvoice.models.DriverUnitSpinner;
 import ec.com.innovatech.mobileinvoice.models.Enterprise;
 import ec.com.innovatech.mobileinvoice.models.HeaderInvoice;
 import ec.com.innovatech.mobileinvoice.models.Item;
-import ec.com.innovatech.mobileinvoice.providers.ClientProvider;
+import ec.com.innovatech.mobileinvoice.models.Transaction;
 import ec.com.innovatech.mobileinvoice.providers.DriverUnitProvider;
 import ec.com.innovatech.mobileinvoice.providers.EnterpriseProvider;
 import ec.com.innovatech.mobileinvoice.providers.InvoiceProvider;
 import ec.com.innovatech.mobileinvoice.providers.ItemProvider;
+import ec.com.innovatech.mobileinvoice.providers.SequenceProvider;
 import ec.com.innovatech.mobileinvoice.providers.TaxProvider;
+import ec.com.innovatech.mobileinvoice.providers.TransactionProvider;
 import ec.com.innovatech.mobileinvoice.util.ValidationUtil;
 
 public class InvoiceActivity extends AppCompatActivity{
     SharedPreferences mPref;
+    SharedPreferences mPrefEnterprise;
     SharedPreferences.Editor editor;
+    SharedPreferences.Editor enterpriseSession;
     FirebaseAuth fireAuth;
     AlertDialog mDialog;
     Button btnAddClient;
@@ -93,6 +92,7 @@ public class InvoiceActivity extends AppCompatActivity{
     TextView lblListEmpty;
     EditText txtSearchItem;
     EditText txtAddQuantity;
+    EditText txtAddPriceUnit;
     EditText txtSubTotal;
     ItemDialogAdapter itemAdapter;
     Item item;
@@ -106,6 +106,7 @@ public class InvoiceActivity extends AppCompatActivity{
     TextView lblStock;
 
     TextView lblSubTotalFac;
+    TextView lblDiscountFac;
     TextView lblTotalNotTaxFac;
     TextView lblTotalTaxFac;
     TextView lblTaxFac;
@@ -124,6 +125,8 @@ public class InvoiceActivity extends AppCompatActivity{
     int numDetail;
     InvoiceProvider invoiceProvider;
     HeaderInvoice headerInvoice;
+    SequenceProvider sequenceProvider;
+    TransactionProvider transactionProvider;
 
     // Objects for print
     BluetoothAdapter bluetoothAdapter;
@@ -137,6 +140,8 @@ public class InvoiceActivity extends AppCompatActivity{
     volatile boolean stopWorker;
     boolean editInvoice;
     boolean printActive;
+    private int sequenceInvoice;
+    private boolean updateSequenceInvoice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -149,7 +154,9 @@ public class InvoiceActivity extends AppCompatActivity{
             e.printStackTrace();
         }
         mPref = getApplicationContext().getSharedPreferences("invoice", MODE_PRIVATE);
+        mPrefEnterprise = getApplicationContext().getSharedPreferences("enterprise", MODE_PRIVATE);
         editor = mPref.edit();
+        enterpriseSession = mPrefEnterprise.edit();
         fireAuth = FirebaseAuth.getInstance();
         MyToolBar.show(this,"Nueva venta", true);
         mDialog = new SpotsDialog.Builder().setContext(InvoiceActivity.this).setMessage("Espere un momento").build();
@@ -160,6 +167,7 @@ public class InvoiceActivity extends AppCompatActivity{
         btnOpenItems = findViewById(R.id.btnOpenDialogItems);
         listDetailInvoiceView = findViewById(R.id.listDetailInvoice);
         lblSubTotalFac = findViewById(R.id.lblSubTotalFac);
+        lblDiscountFac = findViewById(R.id.lblDiscountFac);
         lblTotalNotTaxFac = findViewById(R.id.lblTotalSinIvaFac);
         lblTotalTaxFac = findViewById(R.id.lblTotalIvaFac);
         lblTaxFac = findViewById(R.id.lblIvaFac);
@@ -171,10 +179,11 @@ public class InvoiceActivity extends AppCompatActivity{
         printActive = false;
         headerInvoice = new HeaderInvoice();
         listDetailInvoice = new ArrayList<>();
-
+        transactionProvider = new TransactionProvider();
         driverUnitProvider = new DriverUnitProvider();
         invoiceProvider = new InvoiceProvider();
         enterpriseProvider = new EnterpriseProvider();
+        sequenceProvider = new SequenceProvider();
         // Load data head invoice
         loadDataEnterprise();
 
@@ -182,6 +191,7 @@ public class InvoiceActivity extends AppCompatActivity{
         if(resourceBundle != null) {
             HeaderInvoice invoiceEdit = (HeaderInvoice)resourceBundle.getSerializable("INVOICE_SELECT");
             if(invoiceEdit != null) {
+                updateSequenceInvoice = Boolean.FALSE;
                 editInvoice = false;
                 printActive = true;
                 if(invoiceEdit.getValueDocumentCode().equals("Factura")){
@@ -195,6 +205,7 @@ public class InvoiceActivity extends AppCompatActivity{
                 txInvoiceDate.setText(invoiceEdit.getDateDocument());
                 txtInvoiceClient.setText(invoiceEdit.getClientName());
                 lblSubTotalFac.setText(invoiceEdit.getSubTotal());
+                lblDiscountFac.setText(invoiceEdit.getDiscount());
                 lblTotalNotTaxFac.setText(invoiceEdit.getTotalNotTax());
                 lblTotalTaxFac.setText(invoiceEdit.getTotalTax());
                 lblTaxFac.setText(invoiceEdit.getTotalIva());
@@ -205,7 +216,7 @@ public class InvoiceActivity extends AppCompatActivity{
                 }else {
                     chkPayOut.setChecked(false);
                 }
-                loadDetailInvoice(invoiceEdit.getNumberDocument());
+                loadDetailInvoice(String.valueOf(invoiceEdit.getIdInvoice()));
                 // Disabled the inputs when are invoice view mode
                 txtNumberInvoice.setEnabled(false);
                 txInvoiceDate.setEnabled(false);
@@ -216,6 +227,9 @@ public class InvoiceActivity extends AppCompatActivity{
                 radioInvoice.setEnabled(false);
                 btnOpenItems.setEnabled(false);
                 MyToolBar.show(this,"Ver factura", true);
+            }else{
+                updateSequenceInvoice = Boolean.TRUE;
+                getSequence();
             }
 
             clientSearch = (Client) resourceBundle.getSerializable("CLIENT_SELECT");
@@ -251,6 +265,9 @@ public class InvoiceActivity extends AppCompatActivity{
                 chkPayOut.setChecked(true);
                 editor.putBoolean("payOut", false);
             }
+        }else{
+            updateSequenceInvoice = Boolean.TRUE;
+            getSequence();
         }
 
         btnAddClient.setOnClickListener(new View.OnClickListener() {
@@ -259,6 +276,7 @@ public class InvoiceActivity extends AppCompatActivity{
                 String numberInvoice = txtNumberInvoice.getText().toString();
                 String invoiceDate = txInvoiceDate.getText().toString();
                 String typeDocument = "";
+                Intent intent = new Intent(InvoiceActivity.this, SearchClientActivity.class);
                 if(radioInvoice.isChecked()){
                     typeDocument = (String)radioInvoice.getText();
                     editor.putString("typeDocument", typeDocument);
@@ -267,18 +285,18 @@ public class InvoiceActivity extends AppCompatActivity{
                     typeDocument = (String)radioNoteSale.getText();
                     editor.putString("typeDocument", typeDocument);
                 }
-
-                if(!numberInvoice.isEmpty()){
-                    editor.putString("numberInvoice", numberInvoice);
+                if(!radioInvoice.isChecked() && !radioNoteSale.isChecked()){
+                    editor.putString("typeDocument", "");
                 }
-                if(!invoiceDate.isEmpty()){
-                    editor.putString("invoiceDate", invoiceDate);
-                }
+                editor.putString("numberInvoice", numberInvoice);
+                editor.putString("invoiceDate", invoiceDate);
                 if(chkPayOut.isChecked()){
                     editor.putBoolean("payOut", true);
+                }else{
+                    editor.putBoolean("payOut", false);
                 }
                 editor.apply();
-                Intent intent = new Intent(InvoiceActivity.this, SearchClientActivity.class);
+
                 intent.putExtra("returnOrder", false);
                 startActivity(intent);
             }
@@ -410,6 +428,7 @@ public class InvoiceActivity extends AppCompatActivity{
         lblCost = view.findViewById(R.id.lblSelectCost);
         lblStock = view.findViewById(R.id.lblSelectStock);
         txtAddQuantity = view.findViewById(R.id.txtAddQuantity);
+        txtAddPriceUnit = view.findViewById(R.id.txtAddPrice);
         txtSubTotal = view.findViewById(R.id.txtSubTotal);
         btnAddDetail = view.findViewById(R.id.btnAddDetail);
         // Load data item selected
@@ -422,11 +441,18 @@ public class InvoiceActivity extends AppCompatActivity{
         lblPriceMin.setText(priceRetailFormat);
         lblCost.setText(costFormat);
         lblStock.setText(item.getStock());
+
+        if (clientSearch.getBuyType().equals("Minorista")) {
+            txtAddPriceUnit.setText(priceRetailFormat);
+        } else {
+            txtAddPriceUnit.setText(priceWholesalerFormat);
+        }
+
         // Add items selected
         DriverUnitSpinner driverUnitSpinner = new DriverUnitSpinner(0, "Seleccione");
         listDriverUnitSpinner.add(driverUnitSpinner);
         // Load driver unit for article selected
-        loadDataDriverUnit(item.getBarCode());
+        loadDataDriverUnit(String.valueOf(item.getId()));
         numDetail = 1;
         // Load data of driver unit selected
         spnDriverUnit.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -442,8 +468,9 @@ public class InvoiceActivity extends AppCompatActivity{
                         }
                     }
                     String quantitySend = txtAddQuantity.getText().toString();
-                    if(!quantitySend.isEmpty()){
-                        calcSubTotal(quantitySend);
+                    String priceUnit = txtAddPriceUnit.getText().toString();
+                    if(!quantitySend.isEmpty() && !priceUnit.isEmpty()){
+                        calcSubTotal(quantitySend, priceUnit);
                     }
                 }else{
                     driveUnitSelect = new DriveUnit();
@@ -455,18 +482,17 @@ public class InvoiceActivity extends AppCompatActivity{
 
             }
         });
-        // Calc sub total
+        // Calc sub total when change the quantity
         txtAddQuantity.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
             }
-
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if(driveUnitSelect != null && driveUnitSelect.getUnitDriveValue() != null) {
-                    if(s.length() > 0) {
-                        calcSubTotal(s.toString());
+                    String priceUnit = txtAddPriceUnit.getText().toString();
+                    if(s.length() > 0 && !priceUnit.isEmpty()) {
+                        calcSubTotal(s.toString(), priceUnit);
                     }else{
                         txtSubTotal.setText("");
                     }
@@ -474,10 +500,31 @@ public class InvoiceActivity extends AppCompatActivity{
                     MyToastMessage.error(InvoiceActivity.this, "Seleccione la unidad de manejo");
                 }
             }
-
             @Override
             public void afterTextChanged(Editable s) {
+            }
+        });
 
+        // Calc sub total when change the price
+        txtAddPriceUnit.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String quantityCalc = txtAddQuantity.getText().toString();
+                if(driveUnitSelect != null && driveUnitSelect.getUnitDriveValue() != null) {
+                    if(s.length() > 0 && !quantityCalc.isEmpty()) {
+                        calcSubTotal(quantityCalc, s.toString());
+                    }else{
+                        txtSubTotal.setText("");
+                    }
+                }else{
+                    MyToastMessage.error(InvoiceActivity.this, "Seleccione la unidad de manejo");
+                }
+            }
+            @Override
+            public void afterTextChanged(Editable s) {
             }
         });
 
@@ -497,31 +544,20 @@ public class InvoiceActivity extends AppCompatActivity{
                 if(snapshot.exists()){
                     lblListEmpty.setText("");
                     for (final DataSnapshot itemNode: snapshot.getChildren()){
-                        itemProvider.getItem(itemNode.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                if(snapshot.exists()){
-                                    Item item = new Item();
-                                    item.setBarCode(snapshot.child("barCode").getValue().toString());
-                                    item.setNameItem(snapshot.child("nameItem").getValue().toString());
-                                    item.setCost(snapshot.child("cost").getValue().toString());
-                                    item.setPriceRetail(snapshot.child("priceRetail").getValue().toString());
-                                    item.setPriceWholesaler(snapshot.child("priceWholesaler").getValue().toString());
-                                    item.setCommissionPercentage(snapshot.child("commissionPercentage").getValue().toString());
-                                    item.setStock(snapshot.child("stock").getValue().toString());
-                                    listItems.add(item);
-                                    itemAdapter = new ItemDialogAdapter(getBaseContext(), listItems);
-                                    listView.setAdapter(itemAdapter);
-                                }
-                                mDialog.dismiss();
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError error) {
-
-                            }
-                        });
+                        Item item = new Item();
+                        item.setId(Integer.parseInt(itemNode.child("DataItem").child("id").getValue().toString()));
+                        item.setBarCode(itemNode.child("DataItem").child("barCode").getValue().toString());
+                        item.setNameItem(itemNode.child("DataItem").child("nameItem").getValue().toString());
+                        item.setCost(itemNode.child("DataItem").child("cost").getValue().toString());
+                        item.setPriceRetail(itemNode.child("DataItem").child("priceRetail").getValue().toString());
+                        item.setPriceWholesaler(itemNode.child("DataItem").child("priceWholesaler").getValue().toString());
+                        item.setCommissionPercentage(itemNode.child("DataItem").child("commissionPercentage").getValue().toString());
+                        item.setStock(itemNode.child("DataItem").child("stock").getValue().toString());
+                        listItems.add(item);
                     }
+                    itemAdapter = new ItemDialogAdapter(getBaseContext(), listItems);
+                    listView.setAdapter(itemAdapter);
+                    mDialog.dismiss();
                 }else{
                     lblListEmpty.setText("No existen artículos configurados");
                     mDialog.dismiss();
@@ -582,14 +618,12 @@ public class InvoiceActivity extends AppCompatActivity{
         });
     }
 
-    private void calcSubTotal(String quantitySend){
+    private void calcSubTotal(String quantitySend, String priceUnit){
         int quantity = Integer.parseInt(quantitySend.toString());
         int quantityDriverUnit = quantity * Integer.parseInt(driveUnitSelect.getUnitDriveValue());
         double price = 0.0;
-        if(clientSearch.getBuyType().equals("Minorista")){
-            price = Double.parseDouble(item.getPriceRetail());
-        }else{
-            price = Double.parseDouble(item.getPriceWholesaler());
+        if(!priceUnit.isEmpty()) {
+            price = Double.parseDouble(priceUnit);
         }
         double subTotalInvoice = quantityDriverUnit * price;
         txtSubTotal.setText(ValidationUtil.getTwoDecimal(subTotalInvoice));
@@ -598,23 +632,26 @@ public class InvoiceActivity extends AppCompatActivity{
     private void addDetailInvoice(AlertDialog dialog){
         String numberInvoice = txtNumberInvoice.getText().toString();
         String quantity = txtAddQuantity.getText().toString();
+        String priceUnit = txtAddPriceUnit.getText().toString();
         String subTotal = txtSubTotal.getText().toString();
-        String valueUnit;
+        double valueUnit;
+        double discount = 0;
         if(clientSearch.getBuyType().equals("Minorista")){
-            valueUnit = item.getPriceRetail();
+            valueUnit = Double.parseDouble(item.getPriceRetail());
         }else{
-            valueUnit = item.getPriceWholesaler();
+            valueUnit = Double.parseDouble(item.getPriceWholesaler());
         }
 
-        if (!quantity.isEmpty() && !subTotal.isEmpty() && driveUnitSelect != null && driveUnitSelect.getUnitDriveValue() != null) {
+        if (!quantity.isEmpty() && !subTotal.isEmpty() && driveUnitSelect != null && driveUnitSelect.getUnitDriveValue() != null && !priceUnit.isEmpty()) {
             int quantityNumber = Integer.parseInt(quantity);
             int driverUnit = Integer.parseInt(driveUnitSelect.getUnitDriveValue());
             int totalUnits = quantityNumber * driverUnit;
             int stockExists = Integer.parseInt(item.getStock());
+            discount = (valueUnit - Double.parseDouble(priceUnit)) * quantityNumber * driverUnit;
             if(totalUnits > stockExists){
                 MyToastMessage.error(InvoiceActivity.this, "No existe stock suficiente para el artículo");
             }else {
-                calcTotalInvoice(item.getBarCode(), subTotal, dialog, quantity, valueUnit, numberInvoice);
+                calcTotalInvoice(item.getBarCode(), subTotal, dialog, quantity, priceUnit, numberInvoice, discount);
             }
         } else {
             MyToastMessage.error(InvoiceActivity.this, "Ingrese todos los campos requeridos");
@@ -627,7 +664,7 @@ public class InvoiceActivity extends AppCompatActivity{
      * @param subTotal The subtotal for item
      * @param dialog The dialog to close
      */
-    private void calcTotalInvoice(String barCode, final String subTotal, final AlertDialog dialog, final String quantity, final String valueUnit, final String numberInvoice){
+    private void calcTotalInvoice(String barCode, final String subTotal, final AlertDialog dialog, final String quantity, final String valueUnit, final String numberInvoice, final double discount){
         taxProvider.getTax(barCode, "1").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -635,7 +672,7 @@ public class InvoiceActivity extends AppCompatActivity{
                 if(snapshot.exists()){
                     existsTax = "true";
                 }
-                DetailInvoice detailInvoice = new DetailInvoice("" + numDetail, item.getBarCode(), driveUnitSelect.getUnitDriveValueCode(), driveUnitSelect.getUnitDriveValue(), quantity, numberInvoice, item.getNameItem(), valueUnit, subTotal, existsTax);
+                DetailInvoice detailInvoice = new DetailInvoice(item.getId(), item.getBarCode(), driveUnitSelect.getUnitDriveValueCode(), driveUnitSelect.getUnitDriveValue(), quantity, numberInvoice, item.getNameItem(), valueUnit, subTotal, String.valueOf(discount), existsTax);
                 listDetailInvoice.add(detailInvoice);
                 detailInvoiceAdapter = new DetailInvoiceAdapter(getApplicationContext(), listDetailInvoice);
                 listDetailInvoiceView.setAdapter(detailInvoiceAdapter);
@@ -643,6 +680,7 @@ public class InvoiceActivity extends AppCompatActivity{
 
                 double subTotalItem = Double.parseDouble(subTotal);
                 double subTotalFac = Double.parseDouble(lblSubTotalFac.getText().toString());
+                double discountFac = Double.parseDouble(lblDiscountFac.getText().toString());
                 double totalSinIva = Double.parseDouble(lblTotalNotTaxFac.getText().toString());
                 double totalConIva = Double.parseDouble(lblTotalTaxFac.getText().toString());
                 double totalIva = Double.parseDouble(lblTaxFac.getText().toString());
@@ -657,8 +695,10 @@ public class InvoiceActivity extends AppCompatActivity{
                     totalSinIva = totalSinIva + subTotalItem;
                     ivaItem = 0;
                 }
+                discountFac = discountFac + discount;
                 totalFac = totalFac + subTotalItem + ivaItem;
                 lblSubTotalFac.setText(ValidationUtil.getTwoDecimal(subTotalFac));
+                lblDiscountFac.setText(ValidationUtil.getTwoDecimal(discountFac));
                 lblTotalNotTaxFac.setText(ValidationUtil.getTwoDecimal(totalSinIva));
                 lblTotalTaxFac.setText(ValidationUtil.getTwoDecimal(totalConIva));
                 lblTaxFac.setText(ValidationUtil.getTwoDecimal(totalIva));
@@ -696,6 +736,7 @@ public class InvoiceActivity extends AppCompatActivity{
                 String invoiceDate = txInvoiceDate.getText().toString();
                 String invoiceClient = txtInvoiceClient.getText().toString();
                 String subTotalFac = lblSubTotalFac.getText().toString();
+                String discount = lblDiscountFac.getText().toString();
                 String totalNotTaxFac = lblTotalNotTaxFac.getText().toString();
                 String totalTaxFac = lblTotalTaxFac.getText().toString();
                 String taxFac = lblTaxFac.getText().toString();
@@ -704,6 +745,7 @@ public class InvoiceActivity extends AppCompatActivity{
 
                 if (!typeDocument.isEmpty() && !numberInvoice.isEmpty() && !invoiceDate.isEmpty() && !invoiceClient.isEmpty()) {
                     if (listDetailInvoice.size() > 0) {
+                        headerInvoice.setIdInvoice(sequenceInvoice);
                         headerInvoice.setNumberDocument(numberInvoice);
                         headerInvoice.setDateDocument(invoiceDate);
                         headerInvoice.setPaidOut(payOut);
@@ -714,6 +756,7 @@ public class InvoiceActivity extends AppCompatActivity{
                         headerInvoice.setClientDirection(clientSearch.getAddress());
                         headerInvoice.setClientPhone(clientSearch.getTelephone());
                         headerInvoice.setTotalInvoice(totalFac);
+                        headerInvoice.setDiscount(discount);
                         headerInvoice.setSubTotal(subTotalFac);
                         headerInvoice.setTotalIva(taxFac);
                         headerInvoice.setTotalTax(totalTaxFac);
@@ -723,6 +766,22 @@ public class InvoiceActivity extends AppCompatActivity{
                             headerInvoice.setUserId(userLogin.getEmail());
                         }
                         createHeaderInvoice(headerInvoice);
+
+                        // Save the transaction if the invoice is payout
+                        if(chkPayOut.isChecked()) {
+                            SimpleDateFormat formatDate = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+                            Calendar dateTransaction = Calendar.getInstance();
+                            String currentDate = formatDate.format(dateTransaction.getTime());
+                            Transaction transaction = new Transaction();
+                            if (userLogin != null) {
+                                transaction.setUserId(userLogin.getEmail());
+                            }
+                            transaction.setType("Ingreso");
+                            transaction.setValueTransaction(Double.parseDouble(totalFac));
+                            transaction.setDescription("Ingreso por venta factura Nro:" + headerInvoice.getNumberDocument());
+                            transaction.setDateTransaction(currentDate);
+                            createTransaction(transaction);
+                        }
                     } else {
                         MyToastMessage.error(this, "Ingrese detalles al comprobante");
                         mDialog.dismiss();
@@ -766,23 +825,26 @@ public class InvoiceActivity extends AppCompatActivity{
         invoiceProvider.createHeaderInvoice(invoice).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
-                    createDetailInvoice(invoice.getNumberDocument(), listDetailInvoice);
-                } else {
-                    MyToastMessage.error(InvoiceActivity.this, "No se pudo crear el comprobante");
-                    mDialog.hide();
+            if (task.isSuccessful()) {
+                if(updateSequenceInvoice){
+                    sequenceInvoice++;
+                    updateSequence(sequenceInvoice, invoice);
                 }
+            } else {
+                MyToastMessage.error(InvoiceActivity.this, "No se pudo crear el comprobante");
+                mDialog.hide();
+            }
             }
         });
     }
 
     /**
      * Method for create and save the details of invoice
-     * @param numberDocument The number of document of invoice
+     * @param idInvoice The number of document of invoice
      * @param detailsInvoice The list of details to save
      */
-    void createDetailInvoice(String numberDocument, final List<DetailInvoice> detailsInvoice) {
-        invoiceProvider.createDetailsInvoice(numberDocument, detailsInvoice).addOnCompleteListener(new OnCompleteListener<Void>() {
+    void createDetailInvoice(String idInvoice, final List<DetailInvoice> detailsInvoice) {
+        invoiceProvider.createDetailsInvoice(idInvoice, detailsInvoice).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
@@ -820,14 +882,14 @@ public class InvoiceActivity extends AppCompatActivity{
             int quantityOrder = Integer.parseInt(detailInvoice.getQuantity());
             int valueDriverOrder = Integer.parseInt(detailInvoice.getValueDriverUnit());
             int newStock = stockExists - (quantityOrder * valueDriverOrder);
-            itemProvider.updateStockItem(detailInvoice.getBarCodeItem(), String.valueOf(newStock)).addOnCompleteListener(new OnCompleteListener<Void>() {
+            itemProvider.updateStockItem(detailInvoice.getIdItem(), String.valueOf(newStock)).addOnCompleteListener(new OnCompleteListener<Void>() {
                 @Override
                 public void onComplete(@NonNull Task<Void> task) {
-                    if (task.isSuccessful()) {
-                        mDialog.dismiss();
-                    } else {
-                        MyToastMessage.error(InvoiceActivity.this, "Error al actualizar stock del artículo");
-                    }
+                if (task.isSuccessful()) {
+                    mDialog.dismiss();
+                } else {
+                    MyToastMessage.error(InvoiceActivity.this, "Error al actualizar stock del artículo");
+                }
                 }
             });
         }
@@ -835,21 +897,21 @@ public class InvoiceActivity extends AppCompatActivity{
 
     /**
      * Load detail invoice to select item in list invoices
-     * @param numberDocument The number of document select
+     * @param idInvoice The number of document select
      */
-    void loadDetailInvoice(final String numberDocument){
+    void loadDetailInvoice(final String idInvoice){
         mDialog.show();
-        invoiceProvider.getListDetailsInvoices(numberDocument).addListenerForSingleValueEvent(new ValueEventListener() {
+        invoiceProvider.getListDetailsInvoices(idInvoice).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
                     for (final DataSnapshot invoiceNode: snapshot.getChildren()){
-                        invoiceProvider.getDetailInvoice(numberDocument, invoiceNode.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
+                        invoiceProvider.getDetailInvoice(idInvoice, invoiceNode.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot snapshot) {
                                 if(snapshot.exists()){
                                     DetailInvoice detailInvoice = new DetailInvoice();
-                                    detailInvoice.setId(snapshot.child("id").getValue().toString());
+                                    detailInvoice.setIdItem(Integer.parseInt(snapshot.child("idItem").getValue().toString()));
                                     detailInvoice.setBarCodeItem(snapshot.child("barCodeItem").getValue().toString());
                                     detailInvoice.setDescription(snapshot.child("description").getValue().toString());
                                     detailInvoice.setNumberDocument(snapshot.child("numberDocument").getValue().toString());
@@ -887,6 +949,11 @@ public class InvoiceActivity extends AppCompatActivity{
     @Override
     public void onBackPressed() {
         try {
+            editor.putString("typeDocument", "");
+            editor.putString("typeDocument", "");
+            editor.putString("numberInvoice", "");
+            editor.putString("invoiceDate", "");
+            editor.putBoolean("payOut", false);
             disconnect();
         } catch (IOException e) {
             e.printStackTrace();
@@ -1035,6 +1102,9 @@ public class InvoiceActivity extends AppCompatActivity{
             textPrint.append(ValidationUtil.completeSpaceNumber(21, "Sub total: "));
             textPrint.append(ValidationUtil.completeSpaceNumber(10, lblSubTotalFac.getText().toString()));
             textPrint.append("\n");
+            textPrint.append(ValidationUtil.completeSpaceNumber(21, "Descuento: "));
+            textPrint.append(ValidationUtil.completeSpaceNumber(10, lblDiscountFac.getText().toString()));
+            textPrint.append("\n");
             textPrint.append(ValidationUtil.completeSpaceNumber(21, "Tarifa 0%: "));
             textPrint.append(ValidationUtil.completeSpaceNumber(10, lblTotalNotTaxFac.getText().toString()));
             textPrint.append("\n");
@@ -1093,40 +1163,58 @@ public class InvoiceActivity extends AppCompatActivity{
      * Method for load the data of the enterprise for print in the invoice
      */
     void loadDataEnterprise(){
-        mDialog.show();
-        enterpriseProvider.getListEnterprise().addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    final DataSnapshot enterpriseNode = snapshot.getChildren().iterator().next();
-                    enterpriseProvider.getEnterprise(enterpriseNode.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            if(snapshot.exists()){
-                                enterprise = new Enterprise();
-                                enterprise.setRuc(snapshot.child("ruc").getValue().toString());
-                                enterprise.setName(snapshot.child("name").getValue().toString());
-                                enterprise.setAddress(snapshot.child("address").getValue().toString());
-                                enterprise.setTelephone(snapshot.child("telephone").getValue().toString());
-                                enterprise.setCountry(snapshot.child("country").getValue().toString());
-                                enterprise.setCity(snapshot.child("city").getValue().toString());
-                            }
-                            mDialog.dismiss();
-                        }
+        String addressEnter = mPrefEnterprise.getString("address", "");
+        String cityEnter = mPrefEnterprise.getString("city", "");
+        String countryEnter = mPrefEnterprise.getString("country", "");
+        String nameEnter = mPrefEnterprise.getString("name", "");
+        String rucEnter = mPrefEnterprise.getString("ruc", "");
+        String telephoneEnter = mPrefEnterprise.getString("telephone", "");
 
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {
+        if(addressEnter.isEmpty() || cityEnter.isEmpty() || countryEnter.isEmpty() || nameEnter.isEmpty() || rucEnter.isEmpty() || telephoneEnter.isEmpty()) {
+            mDialog.show();
+            enterpriseProvider.getListEnterprise().addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        for (final DataSnapshot enterpriseNode: snapshot.getChildren()){
+                            enterprise = new Enterprise();
+                            enterprise.setAddress(enterpriseNode.child("address").getValue().toString());
+                            enterprise.setCity(enterpriseNode.child("city").getValue().toString());
+                            enterprise.setCountry(enterpriseNode.child("country").getValue().toString());
+                            enterprise.setName( enterpriseNode.child("name").getValue().toString());
+                            enterprise.setRuc(enterpriseNode.child("ruc").getValue().toString());
+                            enterprise.setTelephone(enterpriseNode.child("telephone").getValue().toString());
+
+                            enterpriseSession.putString("address", enterpriseNode.child("address").getValue().toString());
+                            enterpriseSession.putString("city", enterpriseNode.child("city").getValue().toString());
+                            enterpriseSession.putString("country", enterpriseNode.child("country").getValue().toString());
+                            enterpriseSession.putString("name", enterpriseNode.child("name").getValue().toString());
+                            enterpriseSession.putString("ruc", enterpriseNode.child("ruc").getValue().toString());
+                            enterpriseSession.putString("telephone", enterpriseNode.child("telephone").getValue().toString());
+                            enterpriseSession.apply();
+                            break;
                         }
-                    });
-                } else {
-                    MyToastMessage.warn(InvoiceActivity.this, "Para poder imprimir debe ingresar los datos de la empresa");
-                    mDialog.dismiss();
+                        mDialog.dismiss();
+                    } else {
+                        MyToastMessage.warn(InvoiceActivity.this, "Para poder imprimir debe ingresar los datos de la empresa");
+                        mDialog.dismiss();
+                    }
                 }
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-            }
-        });
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                }
+            });
+        }else{
+            enterprise = new Enterprise();
+            enterprise.setRuc(rucEnter);
+            enterprise.setName(nameEnter);
+            enterprise.setAddress(addressEnter);
+            enterprise.setTelephone(telephoneEnter);
+            enterprise.setCountry(countryEnter);
+            enterprise.setCity(cityEnter);
+            mDialog.dismiss();
+        }
     }
 
     /**
@@ -1134,14 +1222,17 @@ public class InvoiceActivity extends AppCompatActivity{
      */
     private void calculateTotalInvoice(){
         double subTotalFac = 0;
+        double discount = 0;
         double totalSinIva = 0;
         double totalConIva = 0;
         double totalIva = 0;
         double totalFac = 0;
         double ivaItem;
         for (DetailInvoice detailInvoice: listDetailInvoice){
-                double subTotalItem = Double.parseDouble(detailInvoice.getSubTotal());
-                subTotalFac = subTotalFac + subTotalItem;
+            double subTotalItem = Double.parseDouble(detailInvoice.getSubTotal());
+            double discountItem = Double.parseDouble(detailInvoice.getDiscount());
+            subTotalFac = subTotalFac + subTotalItem;
+            discount = discount + discountItem;
                 if(Boolean.parseBoolean(detailInvoice.getExistsTax())){
                     totalConIva = totalConIva + subTotalItem;
                     ivaItem = (subTotalItem * 12) / 100;
@@ -1153,9 +1244,75 @@ public class InvoiceActivity extends AppCompatActivity{
                 totalFac = totalFac + subTotalItem + ivaItem;
         }
         lblSubTotalFac.setText(ValidationUtil.getTwoDecimal(subTotalFac));
+        lblDiscountFac.setText(ValidationUtil.getTwoDecimal(discount));
         lblTotalNotTaxFac.setText(ValidationUtil.getTwoDecimal(totalSinIva));
         lblTotalTaxFac.setText(ValidationUtil.getTwoDecimal(totalConIva));
         lblTaxFac.setText(ValidationUtil.getTwoDecimal(totalIva));
         lblTotalFac.setText(ValidationUtil.getTwoDecimal(totalFac));
+    }
+
+    void getSequence() {
+        sequenceProvider.getSequence("invoice").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                final int[] sequence = {0};
+                if(snapshot.exists()){
+                    sequence[0] = Integer.parseInt(snapshot.getValue().toString());
+                }
+                sequenceInvoice = sequence[0];
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+            }
+        });
+    }
+
+    void updateSequence(int numberSequence, final HeaderInvoice invoice){
+        sequenceProvider.createUpdateSequence("invoice", ""+numberSequence).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (!task.isSuccessful()) {
+                    MyToastMessage.error(InvoiceActivity.this, "Error al actualizar secuencia");
+                }else{
+                    createDetailInvoice(String.valueOf(invoice.getIdInvoice()), listDetailInvoice);
+                }
+            }
+        });
+    }
+
+    void createTransaction(final Transaction transaction) {
+        sequenceProvider.getSequence("transaction").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                final int[] sequence = {0};
+                if(snapshot.exists()){
+                    sequence[0] = Integer.parseInt(snapshot.getValue().toString());
+                }
+                if(transaction.getId() == null){
+                    transaction.setId(sequence[0]);
+                    sequence[0]++;
+                }
+                transactionProvider.createTransaction(transaction).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            sequenceProvider.createUpdateSequence("transaction", String.valueOf(sequence[0])).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (!task.isSuccessful()) {
+                                        MyToastMessage.error(InvoiceActivity.this, "Error al actualizar secuencia de transacción");
+                                    }
+                                }
+                            });
+                        } else {
+                            MyToastMessage.error(InvoiceActivity.this, "No se pudo crear la transacción");
+                        }
+                    }
+                });
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+            }
+        });
     }
 }

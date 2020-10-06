@@ -19,15 +19,15 @@ public class InvoiceProvider {
     }
 
     public Task<Void> createHeaderInvoice(HeaderInvoice headerInvoice){
-        return mDataBase.child(headerInvoice.getNumberDocument()).child("Header").setValue(headerInvoice);
+        return mDataBase.child(String.valueOf(headerInvoice.getIdInvoice())).child("Header").setValue(headerInvoice);
     }
 
-    public Task<Void> createDetailsInvoice(String numberDocument, List<DetailInvoice> detailsInvoice){
-        return mDataBase.child(numberDocument).child("Details").setValue(detailsInvoice);
+    public Task<Void> createDetailsInvoice(String idInvoice, List<DetailInvoice> detailsInvoice){
+        return mDataBase.child(idInvoice).child("Details").setValue(detailsInvoice);
     }
 
-    public Task<Void> updatePayInvoice(String numberDocument, String valuePay){
-        return mDataBase.child(numberDocument).child("Header").child("paidOut").setValue(valuePay);
+    public Task<Void> updatePayInvoice(String idInvoice, String valuePay){
+        return mDataBase.child(idInvoice).child("Header").child("paidOut").setValue(valuePay);
     }
 
     public DatabaseReference getListInvoices(){

@@ -3,6 +3,7 @@ package ec.com.innovatech.mobileinvoice.providers;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 
 import ec.com.innovatech.mobileinvoice.models.Client;
 import ec.com.innovatech.mobileinvoice.models.Item;
@@ -16,15 +17,19 @@ public class ItemProvider {
     }
 
     public Task<Void> createItem(Item item){
-        return mDataBase.child(item.getBarCode()).child("DataItem").setValue(item);
+        return mDataBase.child(""+item.getId()).child("DataItem").setValue(item);
     }
 
-    public Task<Void> updateStockItem(String barCode, String newStock){
-        return mDataBase.child(barCode).child("DataItem").child("stock").setValue(newStock);
+    public Task<Void> updateStockItem(int itemId, String newStock){
+        return mDataBase.child(""+itemId).child("DataItem").child("stock").setValue(newStock);
     }
 
     public DatabaseReference getListItems(){
         return mDataBase;
+    }
+
+    public Query getListItemsSorted(){
+        return mDataBase.orderByChild("DataItem/nameItem");
     }
 
     public DatabaseReference getItem(String id){

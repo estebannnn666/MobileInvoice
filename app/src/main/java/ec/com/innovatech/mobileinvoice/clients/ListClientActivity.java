@@ -61,13 +61,14 @@ public class ListClientActivity extends AppCompatActivity {
 
     public void loadDataClient(){
         mDialog.show();
-        clientProvider.getListClient().addListenerForSingleValueEvent(new ValueEventListener() {
+        clientProvider.getListClientSorted().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
                     lblListEmpty.setText("");
                     for (final DataSnapshot clientNode: snapshot.getChildren()){
                         Client client = new Client();
+                        client.setId(Integer.parseInt(clientNode.child("id").getValue().toString()));
                         client.setBuyType(clientNode.child("buyType").getValue().toString());
                         client.setType(clientNode.child("type").getValue().toString());
                         client.setDocument(clientNode.child("document").getValue().toString());

@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 public class HeaderInvoice implements Serializable {
 
+    private Integer idInvoice;
     private String numberDocument ;
     private String invoiceReferenceCode ;
     private String dateDocument ;
@@ -22,7 +23,8 @@ public class HeaderInvoice implements Serializable {
     private String valueDocumentCode ;
     private String userId;
 
-    public HeaderInvoice(String numberDocument, String invoiceReferenceCode, String dateDocument, String clientDocument, String clientName, String clientDirection, String clientPhone, String paidOut, String discount, String totalNotTax, String totalTax, String totalIva, String subTotal, String totalInvoice, String typeDocumentCode, String valueDocumentCode, String userId){
+    public HeaderInvoice(Integer idInvoice, String numberDocument, String invoiceReferenceCode, String dateDocument, String clientDocument, String clientName, String clientDirection, String clientPhone, String paidOut, String discount, String totalNotTax, String totalTax, String totalIva, String subTotal, String totalInvoice, String typeDocumentCode, String valueDocumentCode, String userId){
+        this.idInvoice = idInvoice;
         this.numberDocument = numberDocument;
         this.invoiceReferenceCode = invoiceReferenceCode;
         this.dateDocument = dateDocument;
@@ -43,6 +45,14 @@ public class HeaderInvoice implements Serializable {
     }
 
     public HeaderInvoice(){
+    }
+
+    public Integer getIdInvoice() {
+        return idInvoice;
+    }
+
+    public void setIdInvoice(Integer idInvoice) {
+        this.idInvoice = idInvoice;
     }
 
     public String getNumberDocument() {

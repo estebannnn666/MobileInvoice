@@ -57,7 +57,8 @@ public class HeaderOrderAdapter extends BaseAdapter implements Filterable {
         TextView lblOrderAddress = (TextView) convertView.findViewById(R.id.lblOrderAddress);
         TextView lblTotalOrder = (TextView) convertView.findViewById(R.id.lblTotalOrder);
         TextView lblOrderStatus = (TextView) convertView.findViewById(R.id.lblOrderStatus);
-        lblNumberOrder.setText(headerOrder.getIdOrder());
+        int numberOrder = headerOrder.getIdOrder() + 1;
+        lblNumberOrder.setText(String.valueOf(numberOrder));
         lblDateOrder.setText(headerOrder.getOrderDate());
         lblDateDelivery.setText(headerOrder.getDeliveryDate());
         lblOrderClient.setText(headerOrder.getClientName());

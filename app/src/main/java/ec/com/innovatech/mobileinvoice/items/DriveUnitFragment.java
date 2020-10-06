@@ -98,7 +98,7 @@ public class DriveUnitFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if(listDriverUnit.size() > 0) {
-                    int cont = 1;
+                    int cont = 0;
                     for (DriveUnit driveUnit : listDriverUnit) {
                         mDialog.show();
                         driveUnit.setId(""+cont);

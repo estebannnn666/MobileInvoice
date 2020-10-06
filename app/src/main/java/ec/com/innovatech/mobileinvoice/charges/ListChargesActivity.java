@@ -18,18 +18,25 @@ import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import dmax.dialog.SpotsDialog;
 import ec.com.innovatech.mobileinvoice.R;
 import ec.com.innovatech.mobileinvoice.includes.MyToastMessage;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
 import ec.com.innovatech.mobileinvoice.models.HeaderInvoice;
+import ec.com.innovatech.mobileinvoice.models.Transaction;
 import ec.com.innovatech.mobileinvoice.providers.InvoiceProvider;
+import ec.com.innovatech.mobileinvoice.providers.SequenceProvider;
+import ec.com.innovatech.mobileinvoice.providers.TransactionProvider;
 import ec.com.innovatech.mobileinvoice.util.ValidationUtil;
 
 public class ListChargesActivity extends AppCompatActivity {
@@ -39,9 +46,12 @@ public class ListChargesActivity extends AppCompatActivity {
     InvoiceAdapter invoiceAdapter;
     ArrayList<HeaderInvoice> headerInvoices;
     InvoiceProvider invoiceProvider;
+    TransactionProvider transactionProvider;
+    SequenceProvider sequenceProvider;
     TextView lblListEmpty;
     TextView lblTotalAccounts;
     TextView lblNumberDocuments;
+    FirebaseAuth fireAuth;
     double totalValue;
     int totalDocuments;
 
@@ -54,6 +64,7 @@ public class ListChargesActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_charges);
+        fireAuth = FirebaseAuth.getInstance();
         MyToolBar.show(this,"Cuentas por cobrar", true);
         mDialog = new SpotsDialog.Builder().setContext(ListChargesActivity.this).setMessage("Espere un momento").build();
         listView = findViewById(R.id.listInvoiceCharges);
@@ -61,7 +72,9 @@ public class ListChargesActivity extends AppCompatActivity {
         lblTotalAccounts = findViewById(R.id.lblTotalAccounts);
         lblNumberDocuments = findViewById(R.id.lblNumberDocuments);
         invoiceProvider = new InvoiceProvider();
+        sequenceProvider = new SequenceProvider();
         headerInvoices = new ArrayList<>();
+        transactionProvider = new TransactionProvider();
         loadInvoicesNotPaid();
         totalValue = 0;
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -85,20 +98,31 @@ public class ListChargesActivity extends AppCompatActivity {
         btnNoCancel = view.findViewById(R.id.btnNotConfirmCancel);
         lblMessageDialog =  view.findViewById(R.id.lblMessageDialog);
         lblTitleDialog =  view.findViewById(R.id.lblTitleDialog);
-        lblMessageDialog.setText("Seguro que desea margar como pagada a la factura seleccionada?");
+        lblMessageDialog.setText("Seguro que desea marcar como pagada a la factura seleccionada?");
         lblTitleDialog.setText("Pagar factura");
 
         btnYesCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
             mDialog.show();
-            invoiceProvider.updatePayInvoice(headerInvoice.getNumberDocument(), "true").addOnCompleteListener(new OnCompleteListener<Void>() {
+            invoiceProvider.updatePayInvoice(String.valueOf(headerInvoice.getIdInvoice()), "true").addOnCompleteListener(new OnCompleteListener<Void>() {
                 @Override
                 public void onComplete(@NonNull Task<Void> task) {
                     if (task.isSuccessful()) {
                         MyToastMessage.susses(ListChargesActivity.this, "La factura seleccionada se marcó como pagada.");
-                        loadInvoicesNotPaid();
-                        mDialog.hide();
+                        SimpleDateFormat formatDate = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+                        Calendar dateTransaction = Calendar.getInstance();
+                        String currentDate = formatDate.format(dateTransaction.getTime());
+                        Transaction transaction = new Transaction();
+                        FirebaseUser userLogin = fireAuth.getCurrentUser();
+                        if (userLogin != null) {
+                            transaction.setUserId(userLogin.getEmail());
+                        }
+                        transaction.setType("Ingreso");
+                        transaction.setValueTransaction(Double.parseDouble(headerInvoice.getTotalInvoice()));
+                        transaction.setDescription("Ingreso por cobro factura Nro:" + headerInvoice.getNumberDocument());
+                        transaction.setDateTransaction(currentDate);
+                        createTransaction(transaction);
                         dialog.dismiss();
                     } else {
                         MyToastMessage.error(ListChargesActivity.this, "Error al pagar la factura");
@@ -118,6 +142,7 @@ public class ListChargesActivity extends AppCompatActivity {
     }
 
     public void loadInvoicesNotPaid(){
+        headerInvoices = new ArrayList<>();
         mDialog.show();
         invoiceProvider.getListInvoicesOrder().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -129,6 +154,7 @@ public class ListChargesActivity extends AppCompatActivity {
                     for (final DataSnapshot invoiceNode: snapshot.getChildren()){
                         if(invoiceNode.child("Header").child("paidOut").getValue().toString().equals("false")){
                             HeaderInvoice headerInvoice = new HeaderInvoice();
+                            headerInvoice.setIdInvoice(Integer.parseInt(invoiceNode.child("Header").child("idInvoice").getValue().toString()));
                             headerInvoice.setTypeDocumentCode(invoiceNode.child("Header").child("typeDocumentCode").getValue().toString());
                             headerInvoice.setTotalNotTax(invoiceNode.child("Header").child("totalNotTax").getValue().toString());
                             headerInvoice.setTotalTax(invoiceNode.child("Header").child("totalTax").getValue().toString());
@@ -148,6 +174,9 @@ public class ListChargesActivity extends AppCompatActivity {
                             totalValue = totalValue + Double.parseDouble(headerInvoice.getTotalInvoice());
                             totalDocuments++;
                         }
+                    }
+                    if(headerInvoices.size() == 0){
+                        lblListEmpty.setText("No existen facturas pendientes de cobro");
                     }
                     invoiceAdapter = new InvoiceAdapter(getBaseContext(), headerInvoices);
                     listView.setAdapter(invoiceAdapter);
@@ -173,7 +202,7 @@ public class ListChargesActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.account_menu, menu);
         MenuItem menuItem = menu.findItem(R.id.searchAccount);
         SearchView searchView = (SearchView)menuItem.getActionView();
-        searchView.setQueryHint("Buscarque por CED/RUC");
+        searchView.setQueryHint("Buscar por CED/RUC");
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -187,5 +216,43 @@ public class ListChargesActivity extends AppCompatActivity {
             }
         });
         return super.onCreateOptionsMenu(menu);
+    }
+
+    void createTransaction(final Transaction transaction) {
+        sequenceProvider.getSequence("transaction").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                final int[] sequence = {1};
+                if(snapshot.exists()){
+                    sequence[0] = Integer.parseInt(snapshot.getValue().toString());
+                }
+                if(transaction.getId() == null){
+                    transaction.setId(sequence[0]);
+                    sequence[0]++;
+                }
+                transactionProvider.createTransaction(transaction).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            sequenceProvider.createUpdateSequence("transaction", String.valueOf(sequence[0])).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (!task.isSuccessful()) {
+                                        MyToastMessage.error(ListChargesActivity.this, "Error al actualizar secuencia de transacción");
+                                    }else{
+                                        loadInvoicesNotPaid();
+                                    }
+                                }
+                            });
+                        } else {
+                            MyToastMessage.error(ListChargesActivity.this, "No se pudo crear la transacción");
+                        }
+                    }
+                });
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+            }
+        });
     }
 }

@@ -14,6 +14,9 @@ import android.widget.Toast;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 
 import dmax.dialog.SpotsDialog;
 import ec.com.innovatech.mobileinvoice.R;
@@ -21,13 +24,16 @@ import ec.com.innovatech.mobileinvoice.RegisterActivity;
 import ec.com.innovatech.mobileinvoice.includes.MyToastMessage;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
 import ec.com.innovatech.mobileinvoice.models.Client;
+import ec.com.innovatech.mobileinvoice.orders.OrderActivity;
 import ec.com.innovatech.mobileinvoice.providers.ClientProvider;
+import ec.com.innovatech.mobileinvoice.providers.SequenceProvider;
 
 public class ClientActivity extends AppCompatActivity {
 
 
 
     ClientProvider clientProvider;
+    SequenceProvider sequenceProvider;
     AlertDialog mDialog;
     RadioButton radioPerson;
     RadioButton radioEnterprise;
@@ -40,6 +46,8 @@ public class ClientActivity extends AppCompatActivity {
     TextInputEditText clientTelephone;
     TextInputEditText clientEmail;
     Button btnSaveClient;
+    private int sequenceClient;
+    private boolean updateSequence;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +57,7 @@ public class ClientActivity extends AppCompatActivity {
 
         mDialog = new SpotsDialog.Builder().setContext(ClientActivity.this).setMessage("Espere un momento").build();
         clientProvider = new ClientProvider();
+        sequenceProvider = new SequenceProvider();
         radioPerson = findViewById(R.id.radioPerson);
         radioEnterprise = findViewById(R.id.radioEnterprise);
         radioMin = findViewById(R.id.radioMin);
@@ -60,9 +69,9 @@ public class ClientActivity extends AppCompatActivity {
         clientTelephone = findViewById(R.id.txtClientTelephone);
         clientEmail = findViewById(R.id.txtClientEmail);
         btnSaveClient = findViewById(R.id.btnSaveClient);
-
         Bundle resourceBundle = getIntent().getExtras();
         if(resourceBundle != null){
+            updateSequence = Boolean.FALSE;
             Client clientEdit = (Client)resourceBundle.getSerializable("CLIENT_SELECT");
             if(clientEdit != null) {
                 if(clientEdit.getType().equals("Persona")){
@@ -85,8 +94,12 @@ public class ClientActivity extends AppCompatActivity {
                 clientCity.setText(clientEdit.getCity());
                 clientTelephone.setText(clientEdit.getTelephone());
                 clientEmail.setText(clientEdit.getEmail());
+                sequenceClient = clientEdit.getId();
                 MyToolBar.show(this,"Editar cliente", true);
             }
+        }else{
+            getSequence();
+            updateSequence = Boolean.TRUE;
         }
         btnSaveClient.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -97,6 +110,7 @@ public class ClientActivity extends AppCompatActivity {
     }
 
     void saveClient(){
+        mDialog.show();
         String type = "";
         if(radioPerson.isChecked()){
             type = (String)radioPerson.getText();
@@ -120,30 +134,68 @@ public class ClientActivity extends AppCompatActivity {
 
         if(!typeBuy.isEmpty() && !type.isEmpty() && !document.isEmpty() && !name.isEmpty() && !address.isEmpty() && !city.isEmpty() && !telephone.isEmpty() && !email.isEmpty()){
             if(document.length()>=10){
-                mDialog.show();
-                Client client = new Client(typeBuy, type, document, name, address, city, telephone, email);
+                Client client = new Client(sequenceClient, typeBuy, type, document, name, address, city, telephone, email);
                 create(client);
             }  else{
                 MyToastMessage.error(ClientActivity.this, "La documento debe tener al menos 10 caracteres numericos");
+                mDialog.dismiss();
             }
         }else{
             MyToastMessage.error(ClientActivity.this, "Ingrese todos los campos requeridos");
+            mDialog.dismiss();
         }
     }
 
-    void create(Client client) {
-        clientProvider.createClient(client).addOnCompleteListener(new OnCompleteListener<Void>() {
+    void create(final Client client) {
+        clientProvider.createClient(client, client.getId()).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    if(updateSequence){
+                        sequenceClient++;
+                        updateSequence(sequenceClient);
+                    }else{
+                        MyToastMessage.susses(ClientActivity.this, "Los datos del cliente se gardaron correctamente");
+                        mDialog.dismiss();
+                    }
+                } else {
+                    MyToastMessage.error(ClientActivity.this, "No se pudo crear el cliente");
+                    mDialog.dismiss();
+                }
+            }
+        });
+
+    }
+
+    private void updateSequence(int numberSequence){
+        sequenceProvider.createUpdateSequence("client", ""+numberSequence).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
                     MyToastMessage.susses(ClientActivity.this, "Los datos del cliente se gardaron correctamente");
-                    mDialog.hide();
+                    mDialog.dismiss();
                     Intent intent = new Intent(ClientActivity.this, ListClientActivity.class);
-                    //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
                 } else {
-                    MyToastMessage.error(ClientActivity.this, "No se pudo crear el cliente");
+                    MyToastMessage.error(ClientActivity.this, "Error al actualizar secuencia");
+                    mDialog.dismiss();
                 }
+            }
+        });
+    }
+
+    void getSequence() {
+        sequenceProvider.getSequence("client").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                final int[] sequence = {0};
+                if(snapshot.exists()){
+                    sequence[0] = Integer.parseInt(snapshot.getValue().toString());
+                }
+                sequenceClient = sequence[0];
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
             }
         });
     }

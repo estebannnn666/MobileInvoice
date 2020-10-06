@@ -39,6 +39,7 @@ import ec.com.innovatech.mobileinvoice.R;
 import ec.com.innovatech.mobileinvoice.includes.MyToastMessage;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
 import ec.com.innovatech.mobileinvoice.invoices.DatePickerFragment;
+import ec.com.innovatech.mobileinvoice.invoices.InvoiceActivity;
 import ec.com.innovatech.mobileinvoice.invoices.ItemDialogAdapter;
 import ec.com.innovatech.mobileinvoice.invoices.SearchClientActivity;
 import ec.com.innovatech.mobileinvoice.models.Client;
@@ -75,6 +76,7 @@ public class OrderActivity extends AppCompatActivity {
     TextView lblListEmpty;
     EditText txtSearchItem;
     EditText txtAddQuantity;
+    EditText txtAddPriceUnit;
     EditText txtSubTotal;
     ItemDialogAdapter itemAdapter;
     Item item;
@@ -88,6 +90,7 @@ public class OrderActivity extends AppCompatActivity {
     TextView lblStock;
 
     TextView lblSubTotalFac;
+    TextView lblDiscountFac;
     TextView lblTotalNotTaxFac;
     TextView lblTotalTaxFac;
     TextView lblTaxFac;
@@ -102,7 +105,6 @@ public class OrderActivity extends AppCompatActivity {
     ListView listDetailOrderView;
     DetailOrderAdapter detailOrderAdapter;
     ArrayList<DetailOrder> listDetailOrders;
-    int numDetail;
     OrderProvider orderProvider;
     SequenceProvider sequenceProvider;
     HeaderOrder headerOrder;
@@ -113,6 +115,8 @@ public class OrderActivity extends AppCompatActivity {
     TextView lblMessageDialog;
 
     boolean editOrder;
+    private int sequenceInvoice;
+    private boolean updateSequence;
 
 
     @Override
@@ -132,6 +136,7 @@ public class OrderActivity extends AppCompatActivity {
         btnOpenItems = findViewById(R.id.btnDialogOrderItems);
         listDetailOrderView = findViewById(R.id.listDetailOrder);
         lblSubTotalFac = findViewById(R.id.lblSubTotalFac);
+        lblDiscountFac = findViewById(R.id.lblDiscountOrder);
         lblTotalNotTaxFac = findViewById(R.id.lblTotalSinIvaFac);
         lblTotalTaxFac = findViewById(R.id.lblTotalIvaFac);
         lblTaxFac = findViewById(R.id.lblIvaFac);
@@ -158,6 +163,7 @@ public class OrderActivity extends AppCompatActivity {
                 lblAddressDelivery.setText(orderEdit.getClientDirection());
                 txtOrderClient.setText(orderEdit.getClientName());
                 lblSubTotalFac.setText(orderEdit.getSubTotal());
+                lblDiscountFac.setText(orderEdit.getDiscount());
                 lblTotalNotTaxFac.setText(orderEdit.getTotalNotTax());
                 lblTotalTaxFac.setText(orderEdit.getTotalTax());
                 lblTaxFac.setText(orderEdit.getTotalIva());
@@ -170,8 +176,11 @@ public class OrderActivity extends AppCompatActivity {
                 btnAddClient.setEnabled(false);
                 btnOpenItems.setEnabled(false);
                 MyToolBar.show(this,"Detalle del pedido", true);
+                updateSequence = Boolean.FALSE;
             }else{
                 editOrder = false;
+                updateSequence = Boolean.TRUE;
+                getSequence();
             }
 
             clientSearch = (Client) resourceBundle.getSerializable("CLIENT_SELECT");
@@ -194,6 +203,9 @@ public class OrderActivity extends AppCompatActivity {
                 txtOrderDate.setText(orderDate);
                 editor.putString("orderDate", "");
             }
+        }else{
+            updateSequence = Boolean.TRUE;
+            getSequence();
         }
 
         btnAddClient.setOnClickListener(new View.OnClickListener() {
@@ -349,6 +361,7 @@ public class OrderActivity extends AppCompatActivity {
         lblCost = view.findViewById(R.id.lblSelectCost);
         lblStock = view.findViewById(R.id.lblSelectStock);
         txtAddQuantity = view.findViewById(R.id.txtAddQuantity);
+        txtAddPriceUnit = view.findViewById(R.id.txtAddPrice);
         txtSubTotal = view.findViewById(R.id.txtSubTotal);
         btnAddDetail = view.findViewById(R.id.btnAddDetail);
         // Load data item selected
@@ -361,12 +374,18 @@ public class OrderActivity extends AppCompatActivity {
         lblPriceMin.setText(priceRetailFormat);
         lblCost.setText(costFormat);
         lblStock.setText(item.getStock());
+
+        if (clientSearch.getBuyType().equals("Minorista")) {
+            txtAddPriceUnit.setText(priceRetailFormat);
+        } else {
+            txtAddPriceUnit.setText(priceWholesalerFormat);
+        }
+
         // Add items selected
         DriverUnitSpinner driverUnitSpinner = new DriverUnitSpinner(0, "Seleccione");
         listDriverUnitSpinner.add(driverUnitSpinner);
         // Load driver unit for article selected
-        loadDataDriverUnit(item.getBarCode());
-        numDetail = 1;
+        loadDataDriverUnit(String.valueOf(item.getId()));
         // Load data of driver unit selected
         spnDriverUnit.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -381,8 +400,9 @@ public class OrderActivity extends AppCompatActivity {
                         }
                     }
                     String quantitySend = txtAddQuantity.getText().toString();
-                    if(!quantitySend.isEmpty()){
-                        calcSubTotal(quantitySend);
+                    String priceUnit = txtAddPriceUnit.getText().toString();
+                    if(!quantitySend.isEmpty() && !priceUnit.isEmpty()){
+                        calcSubTotal(quantitySend, priceUnit);
                     }
                 }else{
                     driveUnitSelect = new DriveUnit();
@@ -404,8 +424,9 @@ public class OrderActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if(driveUnitSelect != null && driveUnitSelect.getUnitDriveValue() != null) {
-                    if(s.length() > 0) {
-                        calcSubTotal(s.toString());
+                    String priceUnit = txtAddPriceUnit.getText().toString();
+                    if(s.length() > 0 && !priceUnit.isEmpty()) {
+                        calcSubTotal(s.toString(), priceUnit);
                     }else{
                         txtSubTotal.setText("");
                     }
@@ -417,6 +438,29 @@ public class OrderActivity extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable s) {
 
+            }
+        });
+
+        // Calc sub total when change the price
+        txtAddPriceUnit.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String quantityCalc = txtAddQuantity.getText().toString();
+                if(driveUnitSelect != null && driveUnitSelect.getUnitDriveValue() != null) {
+                    if(s.length() > 0 && !quantityCalc.isEmpty()) {
+                        calcSubTotal(quantityCalc, s.toString());
+                    }else{
+                        txtSubTotal.setText("");
+                    }
+                }else{
+                    MyToastMessage.error(OrderActivity.this, "Seleccione la unidad de manejo");
+                }
+            }
+            @Override
+            public void afterTextChanged(Editable s) {
             }
         });
 
@@ -441,6 +485,7 @@ public class OrderActivity extends AppCompatActivity {
                             public void onDataChange(@NonNull DataSnapshot snapshot) {
                                 if(snapshot.exists()){
                                     Item item = new Item();
+                                    item.setId(Integer.parseInt(snapshot.child("id").getValue().toString()));
                                     item.setBarCode(snapshot.child("barCode").getValue().toString());
                                     item.setNameItem(snapshot.child("nameItem").getValue().toString());
                                     item.setCost(snapshot.child("cost").getValue().toString());
@@ -486,6 +531,7 @@ public class OrderActivity extends AppCompatActivity {
                             public void onDataChange(@NonNull DataSnapshot snapshot) {
                                 if(snapshot.exists()){
                                     Item item = new Item();
+                                    item.setId(Integer.parseInt(snapshot.child("id").getValue().toString()));
                                     item.setBarCode(snapshot.child("barCode").getValue().toString());
                                     item.setNameItem(snapshot.child("nameItem").getValue().toString());
                                     item.setCost(snapshot.child("cost").getValue().toString());
@@ -562,39 +608,39 @@ public class OrderActivity extends AppCompatActivity {
         });
     }
 
-    private void calcSubTotal(String quantitySend){
+    private void calcSubTotal(String quantitySend, String priceUnit){
         int quantity = Integer.parseInt(quantitySend.toString());
         int quantityDriverUnit = quantity * Integer.parseInt(driveUnitSelect.getUnitDriveValue());
         double price = 0.0;
-        if(clientSearch.getBuyType().equals("Minorista")){
-            price = Double.parseDouble(item.getPriceRetail());
-        }else{
-            price = Double.parseDouble(item.getPriceWholesaler());
+        if(!priceUnit.isEmpty()) {
+            price = Double.parseDouble(priceUnit);
         }
         double subTotalInvoice = quantityDriverUnit * price;
         txtSubTotal.setText(ValidationUtil.getTwoDecimal(subTotalInvoice));
     }
 
     private void addDetailInvoice(AlertDialog dialog){
-        String numberInvoice = txtDeliveryDate.getText().toString();
         String quantity = txtAddQuantity.getText().toString();
+        String priceUnit = txtAddPriceUnit.getText().toString();
         String subTotal = txtSubTotal.getText().toString();
-        String valueUnit;
+        double valueUnit;
+        double discount = 0;
         if(clientSearch.getBuyType().equals("Minorista")){
-            valueUnit = item.getPriceRetail();
+            valueUnit = Double.parseDouble(item.getPriceRetail());
         }else{
-            valueUnit = item.getPriceWholesaler();
+            valueUnit = Double.parseDouble(item.getPriceWholesaler());
         }
 
-        if (!quantity.isEmpty() && !subTotal.isEmpty() && driveUnitSelect != null && driveUnitSelect.getUnitDriveValue() != null) {
+        if (!quantity.isEmpty() && !priceUnit.isEmpty() && !subTotal.isEmpty() && driveUnitSelect != null && driveUnitSelect.getUnitDriveValue() != null) {
             int quantityNumber = Integer.parseInt(quantity);
             int driverUnit = Integer.parseInt(driveUnitSelect.getUnitDriveValue());
             int totalUnits = quantityNumber * driverUnit;
             int stockExists = Integer.parseInt(item.getStock());
+            discount = (valueUnit - Double.parseDouble(priceUnit)) * quantityNumber * driverUnit;
             if(totalUnits > stockExists){
                 MyToastMessage.error(OrderActivity.this, "No existe stock suficiente para el artículo");
             }else {
-                calcTotalInvoice(item.getBarCode(), subTotal, dialog, quantity, valueUnit, numberInvoice);
+                calcTotalInvoice(item.getBarCode(), subTotal, dialog, quantity, priceUnit, discount);
             }
         } else {
             MyToastMessage.error(OrderActivity.this, "Ingrese todos los campos requeridos");
@@ -607,7 +653,7 @@ public class OrderActivity extends AppCompatActivity {
      * @param subTotal The subtotal for item
      * @param dialog The dialog to close
      */
-    private void calcTotalInvoice(String barCode, final String subTotal, final AlertDialog dialog, final String quantity, final String valueUnit, final String numberInvoice){
+    private void calcTotalInvoice(String barCode, final String subTotal, final AlertDialog dialog, final String quantity, final String valueUnit, final double discount){
         taxProvider.getTax(barCode, "1").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -615,14 +661,14 @@ public class OrderActivity extends AppCompatActivity {
                 if(snapshot.exists()){
                     existsTax = "true";
                 }
-                DetailOrder detailOrder = new DetailOrder("" + numDetail, item.getBarCode(), driveUnitSelect.getUnitDriveValueCode(), driveUnitSelect.getUnitDriveValue(), quantity, item.getNameItem(), valueUnit, subTotal, existsTax);
+                DetailOrder detailOrder = new DetailOrder(item.getId(), item.getBarCode(), driveUnitSelect.getUnitDriveValueCode(), driveUnitSelect.getUnitDriveValue(), quantity, item.getNameItem(), valueUnit, subTotal, String.valueOf(discount), existsTax);
                 listDetailOrders.add(detailOrder);
                 detailOrderAdapter = new DetailOrderAdapter(getApplicationContext(), listDetailOrders);
                 listDetailOrderView.setAdapter(detailOrderAdapter);
-                numDetail++;
 
                 double subTotalItem = Double.parseDouble(subTotal);
                 double subTotalFac = Double.parseDouble(lblSubTotalFac.getText().toString());
+                double discountFac = Double.parseDouble(lblDiscountFac.getText().toString());
                 double totalSinIva = Double.parseDouble(lblTotalNotTaxFac.getText().toString());
                 double totalConIva = Double.parseDouble(lblTotalTaxFac.getText().toString());
                 double totalIva = Double.parseDouble(lblTaxFac.getText().toString());
@@ -638,7 +684,9 @@ public class OrderActivity extends AppCompatActivity {
                     ivaItem = 0;
                 }
                 totalFac = totalFac + subTotalItem + ivaItem;
+                discountFac = discountFac + discount;
                 lblSubTotalFac.setText(ValidationUtil.getTwoDecimal(subTotalFac));
+                lblDiscountFac.setText(ValidationUtil.getTwoDecimal(discountFac));
                 lblTotalNotTaxFac.setText(ValidationUtil.getTwoDecimal(totalSinIva));
                 lblTotalTaxFac.setText(ValidationUtil.getTwoDecimal(totalConIva));
                 lblTaxFac.setText(ValidationUtil.getTwoDecimal(totalIva));
@@ -669,6 +717,7 @@ public class OrderActivity extends AppCompatActivity {
                 String orderDate = txtOrderDate.getText().toString();
                 String invoiceClient = txtOrderClient.getText().toString();
                 String subTotalFac = lblSubTotalFac.getText().toString();
+                String discount = lblDiscountFac.getText().toString();
                 String totalNotTaxFac = lblTotalNotTaxFac.getText().toString();
                 String totalTaxFac = lblTotalTaxFac.getText().toString();
                 String taxFac = lblTaxFac.getText().toString();
@@ -676,6 +725,7 @@ public class OrderActivity extends AppCompatActivity {
 
                 if (!deliveryDate.isEmpty() && !orderDate.isEmpty() && !invoiceClient.isEmpty()) {
                     if (listDetailOrders.size() > 0) {
+                        headerOrder.setIdOrder(sequenceInvoice);
                         headerOrder.setStatusOrder("PENDIENTE");
                         headerOrder.setDeliveryDate(deliveryDate);
                         headerOrder.setOrderDate(orderDate);
@@ -685,6 +735,7 @@ public class OrderActivity extends AppCompatActivity {
                         headerOrder.setClientPhone(clientSearch.getTelephone());
                         headerOrder.setTotalInvoice(totalFac);
                         headerOrder.setSubTotal(subTotalFac);
+                        headerOrder.setDiscount(discount);
                         headerOrder.setTotalIva(taxFac);
                         headerOrder.setTotalTax(totalTaxFac);
                         headerOrder.setTotalNotTax(totalNotTaxFac);
@@ -707,11 +758,15 @@ public class OrderActivity extends AppCompatActivity {
         }
         // Option delivery
         if(item.getItemId() == R.id.menuDelivery){
-            if(editOrder && !headerOrder.getIdOrder().isEmpty() && !listDetailOrders.isEmpty()) {
-                if(headerOrder.getStatusOrder().equals("ENTREGADO")){
-                    MyToastMessage.info(OrderActivity.this, "El pedido ya se encuentra entregado");
+            if(editOrder && headerOrder.getIdOrder() != null && !listDetailOrders.isEmpty()) {
+                if(headerOrder.getStatusOrder().equals("CANCELADO")){
+                    MyToastMessage.info(OrderActivity.this, "El pedido no se puede entregar porque se encuentra cancelado");
                 }else {
-                    openDialogDelivery();
+                    if (headerOrder.getStatusOrder().equals("ENTREGADO")) {
+                        MyToastMessage.info(OrderActivity.this, "El pedido ya se encuentra entregado");
+                    } else {
+                        openDialogDelivery();
+                    }
                 }
             }else{
                 MyToastMessage.info(OrderActivity.this, "No existe ningun pedido seleccionado guardado");
@@ -720,11 +775,15 @@ public class OrderActivity extends AppCompatActivity {
 
         // Option cancel
         if(item.getItemId() == R.id.menuCancel){
-            if(editOrder && !headerOrder.getIdOrder().isEmpty() && !listDetailOrders.isEmpty()) {
-                if(headerOrder.getStatusOrder().equals("ENTREGADO")){
-                    MyToastMessage.warn(OrderActivity.this, "No se puede cancelar porque el pedido ya se encuentra entregado");
+            if(editOrder && headerOrder.getIdOrder() != null && !listDetailOrders.isEmpty()) {
+                if(headerOrder.getStatusOrder().equals("CANCELADO")){
+                    MyToastMessage.warn(OrderActivity.this, "El pedido ya se encuentra cancelado");
                 }else {
-                    openDialogCancel();
+                    if (headerOrder.getStatusOrder().equals("ENTREGADO")) {
+                        MyToastMessage.warn(OrderActivity.this, "No se puede cancelar porque el pedido ya se encuentra entregado");
+                    } else {
+                        openDialogCancel();
+                    }
                 }
             }else{
                 MyToastMessage.info(OrderActivity.this, "No existe ningun pedido seleccionado guardado");
@@ -753,16 +812,16 @@ public class OrderActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mDialog.show();
-                orderProvider.deleteOrder(headerOrder.getIdOrder()).addOnCompleteListener(new OnCompleteListener<Void>() {
+                orderProvider.updateStatusOrder(headerOrder.getIdOrder(), "CANCELADO").addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
-                            updateStockItem(listDetailOrders, headerOrder.getIdOrder(), "plus");
+                            updateStockItem(listDetailOrders, "plus");
                             Intent intent = new Intent(OrderActivity.this, ListOrderActivity.class);
                             startActivity(intent);
                         } else {
                             MyToastMessage.error(OrderActivity.this, "Error al cancelar el pedido");
-                            mDialog.hide();
+                            mDialog.dismiss();
                         }
                     }
                 });
@@ -823,33 +882,20 @@ public class OrderActivity extends AppCompatActivity {
      * @param order The data header of the invoice
      */
     void createHeaderOrder(final HeaderOrder order) {
-        sequenceProvider.getSequence("order").addListenerForSingleValueEvent(new ValueEventListener() {
+        orderProvider.createHeaderOrder(order).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                final int[] sequence = {1};
-                if(snapshot.exists()){
-                    sequence[0] = Integer.parseInt(snapshot.getValue().toString());
+            public void onComplete(@NonNull Task<Void> task) {
+            if (task.isSuccessful()) {
+                if(updateSequence){
+                    sequenceInvoice++;
+                    updateSequence(sequenceInvoice, String.valueOf(order.getIdOrder()));
+                }else{
+                    createDetailOrder(String.valueOf(order.getIdOrder()), listDetailOrders);
                 }
-                if(headerOrder.getIdOrder() == null){
-                    order.setIdOrder(String.valueOf(sequence[0]));
-                    sequence[0]++;
-                }
-                orderProvider.createHeaderOrder(order).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            createDetailOrder(order.getIdOrder(), listDetailOrders, String.valueOf(sequence[0]));
-                        } else {
-                            MyToastMessage.error(OrderActivity.this, "Error al guardar los datos del pedido");
-                            mDialog.hide();
-                        }
-                    }
-                });
+            } else {
+                MyToastMessage.error(OrderActivity.this, "Error al guardar los datos del pedido");
+                mDialog.hide();
             }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
             }
         });
     }
@@ -859,7 +905,7 @@ public class OrderActivity extends AppCompatActivity {
      * @param idOrder The number of document of invoice
      * @param detailsInvoice The list of details to save
      */
-    void createDetailOrder(String idOrder, final List<DetailOrder> detailsInvoice, final String numberOrder) {
+    void createDetailOrder(String idOrder, final List<DetailOrder> detailsInvoice) {
         orderProvider.createDetailsOrder(idOrder, detailsInvoice).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
@@ -868,7 +914,7 @@ public class OrderActivity extends AppCompatActivity {
                     try {
                         Intent intent = new Intent(OrderActivity.this, ListOrderActivity.class);
                         startActivity(intent);
-                        updateStockItem(detailsInvoice, numberOrder, "remove");
+                        updateStockItem(detailsInvoice, "remove");
                     }catch (Exception e){
                         e.printStackTrace();
                     }
@@ -884,7 +930,7 @@ public class OrderActivity extends AppCompatActivity {
      * Method for create and save the details of invoice
      * @param detailsInvoice The list of details to save
      */
-    void updateStockItem(List<DetailOrder> detailsInvoice, final String numberOrder, String action) {
+    void updateStockItem(List<DetailOrder> detailsInvoice, String action) {
         for (final DetailOrder detailInvoice: detailsInvoice){
             int stockExists = 0;
             for(Item itemTemp : listItems){
@@ -901,25 +947,15 @@ public class OrderActivity extends AppCompatActivity {
             }else{
                 newStock = stockExists + (quantityOrder * valueDriverOrder);
             }
-            itemProvider.updateStockItem(detailInvoice.getBarCodeItem(), String.valueOf(newStock)).addOnCompleteListener(new OnCompleteListener<Void>() {
+            itemProvider.updateStockItem(detailInvoice.getIdItem(), String.valueOf(newStock)).addOnCompleteListener(new OnCompleteListener<Void>() {
                 @Override
                 public void onComplete(@NonNull Task<Void> task) {
                     if (task.isSuccessful()) {
-                        sequenceProvider.createUpdateSequence("order", numberOrder).addOnCompleteListener(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                MyToastMessage.susses(OrderActivity.this, "El acción se ejecutó correctamente");
-                                mDialog.hide();
-                            } else {
-                                MyToastMessage.error(OrderActivity.this, "Error al actualizar secuencia");
-                                mDialog.hide();
-                            }
-                            }
-                        });
+                        MyToastMessage.susses(OrderActivity.this, "El acción se ejecutó correctamente");
+                        mDialog.dismiss();
                     } else {
                         MyToastMessage.error(OrderActivity.this, "Error al actualizar stock del artículo");
-                        mDialog.hide();
+                        mDialog.dismiss();
                     }
                 }
             });
@@ -930,7 +966,7 @@ public class OrderActivity extends AppCompatActivity {
      * Load detail invoice to select item in list invoices
      * @param idOrder The number of document select
      */
-    void loadDetailOrder(final String idOrder){
+    void loadDetailOrder(final int idOrder){
         mDialog.show();
         orderProvider.getListDetailsOrder(idOrder).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -942,7 +978,7 @@ public class OrderActivity extends AppCompatActivity {
                             public void onDataChange(@NonNull DataSnapshot snapshot) {
                                 if(snapshot.exists()){
                                     DetailOrder detailInvoice = new DetailOrder();
-                                    detailInvoice.setId(snapshot.child("id").getValue().toString());
+                                    detailInvoice.setIdItem(Integer.parseInt(snapshot.child("idItem").getValue().toString()));
                                     detailInvoice.setBarCodeItem(snapshot.child("barCodeItem").getValue().toString());
                                     detailInvoice.setDescription(snapshot.child("description").getValue().toString());
                                     detailInvoice.setQuantity(snapshot.child("quantity").getValue().toString());
@@ -981,6 +1017,7 @@ public class OrderActivity extends AppCompatActivity {
      */
     private void calculateTotalOrder(){
         double subTotalFac = 0;
+        double discount = 0;
         double totalSinIva = 0;
         double totalConIva = 0;
         double totalIva = 0;
@@ -988,7 +1025,9 @@ public class OrderActivity extends AppCompatActivity {
         double ivaItem;
         for (DetailOrder detailInvoice: listDetailOrders){
             double subTotalItem = Double.parseDouble(detailInvoice.getSubTotal());
+            double discountItem = Double.parseDouble(detailInvoice.getDiscount());
             subTotalFac = subTotalFac + subTotalItem;
+            discount = discount + discountItem;
             if(Boolean.parseBoolean(detailInvoice.getExistsTax())){
                 totalConIva = totalConIva + subTotalItem;
                 ivaItem = (subTotalItem * 12) / 100;
@@ -1000,9 +1039,40 @@ public class OrderActivity extends AppCompatActivity {
             totalFac = totalFac + subTotalItem + ivaItem;
         }
         lblSubTotalFac.setText(ValidationUtil.getTwoDecimal(subTotalFac));
+        lblDiscountFac.setText(ValidationUtil.getTwoDecimal(discount));
         lblTotalNotTaxFac.setText(ValidationUtil.getTwoDecimal(totalSinIva));
         lblTotalTaxFac.setText(ValidationUtil.getTwoDecimal(totalConIva));
         lblTaxFac.setText(ValidationUtil.getTwoDecimal(totalIva));
         lblTotalFac.setText(ValidationUtil.getTwoDecimal(totalFac));
+    }
+
+    void getSequence() {
+        sequenceProvider.getSequence("order").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                final int[] sequence = {0};
+                if(snapshot.exists()){
+                    sequence[0] = Integer.parseInt(snapshot.getValue().toString());
+                }
+                sequenceInvoice = sequence[0];
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+            }
+        });
+    }
+
+    void updateSequence(int numberSequence, final String idOrder){
+        sequenceProvider.createUpdateSequence("order", ""+numberSequence).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    createDetailOrder(idOrder, listDetailOrders);
+                } else {
+                    MyToastMessage.error(OrderActivity.this, "Error al actualizar secuencia");
+                    mDialog.dismiss();
+                }
+            }
+        });
     }
 }

@@ -13,10 +13,20 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:name=".user.ListUserActivity"
+            android:parentActivityName=".MenuActivity"/>
+        <activity
+            android:name=".cash.ListTransactionActivity"
+            android:parentActivityName=".cash.TransactionActivity" />
+        <activity
+            android:name=".cash.TransactionActivity"
+            android:parentActivityName=".MenuActivity" />
+        <activity
             android:name=".orders.OrderActivity"
             android:parentActivityName=".orders.ListOrderActivity" />
-        <activity android:name=".orders.ListOrderActivity"
-            android:parentActivityName=".MenuActivity"/>
+        <activity
+            android:name=".orders.ListOrderActivity"
+            android:parentActivityName=".MenuActivity" />
         <activity
             android:name=".enterprise.EnterpriseActivity"
             android:parentActivityName=".MenuActivity" />
