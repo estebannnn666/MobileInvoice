@@ -70,7 +70,7 @@ public class SearchClientActivity extends AppCompatActivity {
 
     public void loadDataClient(){
         mDialog.show();
-        clientProvider.getListClient().addListenerForSingleValueEvent(new ValueEventListener() {
+        clientProvider.getListClientSorted().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){

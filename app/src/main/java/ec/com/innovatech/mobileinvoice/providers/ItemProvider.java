@@ -17,11 +17,11 @@ public class ItemProvider {
     }
 
     public Task<Void> createItem(Item item){
-        return mDataBase.child(""+item.getId()).child("DataItem").setValue(item);
+        return mDataBase.child(""+item.getId()).child("dataItem").setValue(item);
     }
 
     public Task<Void> updateStockItem(int itemId, String newStock){
-        return mDataBase.child(""+itemId).child("DataItem").child("stock").setValue(newStock);
+        return mDataBase.child(""+itemId).child("dataItem").child("stock").setValue(newStock);
     }
 
     public DatabaseReference getListItems(){
@@ -29,10 +29,10 @@ public class ItemProvider {
     }
 
     public Query getListItemsSorted(){
-        return mDataBase.orderByChild("DataItem/nameItem");
+        return mDataBase.orderByChild("dataItem/nameItem");
     }
 
     public DatabaseReference getItem(String id){
-        return mDataBase.child(id).child("DataItem");
+        return mDataBase.child(id).child("dataItem");
     }
 }

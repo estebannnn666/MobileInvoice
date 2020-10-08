@@ -474,7 +474,7 @@ public class OrderActivity extends AppCompatActivity {
 
     public void loadDataItems(){
         mDialog.show();
-        itemProvider.getListItems().addListenerForSingleValueEvent(new ValueEventListener() {
+        itemProvider.getListItemsSorted().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){

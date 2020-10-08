@@ -4,9 +4,6 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import java.util.Collection;
-
-import ec.com.innovatech.mobileinvoice.models.Item;
 import ec.com.innovatech.mobileinvoice.models.Tax;
 
 public class TaxProvider {
@@ -18,18 +15,18 @@ public class TaxProvider {
     }
 
     public Task<Void> createTax(String barCode, Tax tax){
-        return mDataBase.child(barCode).child("Taxes").child(tax.getId()).setValue(tax);
+        return mDataBase.child(barCode).child("taxes").child(tax.getId()).setValue(tax);
     }
 
     public Task<Void> removeTax(String barCode, Tax tax){
-        return mDataBase.child(barCode).child("Taxes").child(tax.getId()).removeValue();
+        return mDataBase.child(barCode).child("taxes").child(tax.getId()).removeValue();
     }
 
     public DatabaseReference getListTaxes(String barCode){
-        return mDataBase.child(barCode).child("Taxes");
+        return mDataBase.child(barCode).child("taxes");
     }
 
     public DatabaseReference getTax(String barCode, String id){
-        return mDataBase.child(barCode).child("Taxes").child(id);
+        return mDataBase.child(barCode).child("taxes").child(id);
     }
 }

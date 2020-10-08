@@ -78,14 +78,14 @@ public class ListItemActivity extends AppCompatActivity {
                     lblListEmpty.setText("");
                     for (final DataSnapshot itemNode: snapshot.getChildren()){
                         Item item = new Item();
-                        item.setId(Integer.parseInt(itemNode.child("DataItem").child("id").getValue().toString()));
-                        item.setBarCode(itemNode.child("DataItem").child("barCode").getValue().toString());
-                        item.setNameItem(itemNode.child("DataItem").child("nameItem").getValue().toString());
-                        item.setCost(itemNode.child("DataItem").child("cost").getValue().toString());
-                        item.setPriceRetail(itemNode.child("DataItem").child("priceRetail").getValue().toString());
-                        item.setPriceWholesaler(itemNode.child("DataItem").child("priceWholesaler").getValue().toString());
-                        item.setCommissionPercentage(itemNode.child("DataItem").child("commissionPercentage").getValue().toString());
-                        item.setStock(itemNode.child("DataItem").child("stock").getValue().toString());
+                        item.setId(Integer.parseInt(itemNode.child("dataItem").child("id").getValue().toString()));
+                        item.setBarCode(itemNode.child("dataItem").child("barCode").getValue().toString());
+                        item.setNameItem(itemNode.child("dataItem").child("nameItem").getValue().toString());
+                        item.setCost(itemNode.child("dataItem").child("cost").getValue().toString());
+                        item.setPriceRetail(itemNode.child("dataItem").child("priceRetail").getValue().toString());
+                        item.setPriceWholesaler(itemNode.child("dataItem").child("priceWholesaler").getValue().toString());
+                        item.setCommissionPercentage(itemNode.child("dataItem").child("commissionPercentage").getValue().toString());
+                        item.setStock(itemNode.child("dataItem").child("stock").getValue().toString());
                         listItems.add(item);
                     }
                     itemAdapter = new ItemAdapter(getBaseContext(), listItems);
