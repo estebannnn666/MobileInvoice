@@ -53,7 +53,7 @@ public class ListClientActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent intent = new Intent(ListClientActivity.this, ClientActivity.class);
-                intent.putExtra("CLIENT_SELECT", listClients.get(position));
+                intent.putExtra("CLIENT_SELECT", clientAdapter.getListClients().get(position));
                 startActivity(intent);
             }
         });
@@ -126,4 +126,5 @@ public class ListClientActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+
 }

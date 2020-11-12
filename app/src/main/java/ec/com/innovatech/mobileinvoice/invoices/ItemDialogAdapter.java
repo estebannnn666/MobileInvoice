@@ -95,4 +95,8 @@ public class ItemDialogAdapter extends BaseAdapter implements Filterable {
             }
         };
     }
+
+    public ArrayList<Item> getListItems() {
+        return listItems;
+    }
 }

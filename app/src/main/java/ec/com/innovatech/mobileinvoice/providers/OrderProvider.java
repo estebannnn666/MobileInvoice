@@ -21,38 +21,42 @@ public class OrderProvider {
     }
 
     public Task<Void> createHeaderOrder(HeaderOrder headerOrder){
-        return mDataBase.child(""+headerOrder.getIdOrder()).child("Header").setValue(headerOrder);
+        return mDataBase.child(""+headerOrder.getIdOrder()).child("header").setValue(headerOrder);
     }
 
     public Task<Void> createDetailsOrder(String idOrder, List<DetailOrder> detailOrders){
-        return mDataBase.child(idOrder).child("Details").setValue(detailOrders);
+        return mDataBase.child(idOrder).child("details").setValue(detailOrders);
     }
 
     public Task<Void> updateStatusOrder(Integer idOrder, String statusOrder){
-        return mDataBase.child(String.valueOf(idOrder)).child("Header").child("statusOrder").setValue(statusOrder);
+        return mDataBase.child(String.valueOf(idOrder)).child("header").child("statusOrder").setValue(statusOrder);
     }
 
     public DatabaseReference getListOrder(){
         return mDataBase;
     }
 
-    public Query getListOrderSorted(){
-        return mDataBase.orderByChild("Header/orderDate");
+    public Query getListOrderSorted(boolean isAdmin, String seller){
+        if(isAdmin) {
+            return mDataBase.orderByChild("header/orderDate");
+        }else {
+            return mDataBase.orderByChild("header/userId").equalTo(seller);
+        }
     }
-
     public DatabaseReference getOrder(String idOrder){
-        return mDataBase.child(idOrder).child("Header");
+        return mDataBase.child(idOrder).child("header");
     }
 
     public DatabaseReference getListDetailsOrder(Integer idOrder){
-        return mDataBase.child(String.valueOf(idOrder)).child("Details");
+        return mDataBase.child(String.valueOf(idOrder)).child("details");
     }
 
     public DatabaseReference getDetailOrder(Integer idOrder, String id){
-        return mDataBase.child(String.valueOf(idOrder)).child("Details").child(id);
+        return mDataBase.child(String.valueOf(idOrder)).child("details").child(id);
     }
 
     public Task<Void> deleteOrder(String idOrder){
         return mDataBase.child(idOrder).removeValue();
     }
+
 }

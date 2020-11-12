@@ -5,7 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 
 import android.app.AlertDialog;
-import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -18,8 +18,6 @@ import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
@@ -51,7 +49,7 @@ public class ListChargesActivity extends AppCompatActivity {
     TextView lblListEmpty;
     TextView lblTotalAccounts;
     TextView lblNumberDocuments;
-    FirebaseAuth fireAuth;
+    SharedPreferences mPrefUser;
     double totalValue;
     int totalDocuments;
 
@@ -64,8 +62,8 @@ public class ListChargesActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_charges);
-        fireAuth = FirebaseAuth.getInstance();
         MyToolBar.show(this,"Cuentas por cobrar", true);
+        mPrefUser = getApplicationContext().getSharedPreferences("user_session", MODE_PRIVATE);
         mDialog = new SpotsDialog.Builder().setContext(ListChargesActivity.this).setMessage("Espere un momento").build();
         listView = findViewById(R.id.listInvoiceCharges);
         lblListEmpty =  findViewById(R.id.txtInvoiceChargeEmpty);
@@ -114,10 +112,7 @@ public class ListChargesActivity extends AppCompatActivity {
                         Calendar dateTransaction = Calendar.getInstance();
                         String currentDate = formatDate.format(dateTransaction.getTime());
                         Transaction transaction = new Transaction();
-                        FirebaseUser userLogin = fireAuth.getCurrentUser();
-                        if (userLogin != null) {
-                            transaction.setUserId(userLogin.getEmail());
-                        }
+                        transaction.setUserId(mPrefUser.getString("identifier", ""));
                         transaction.setType("Ingreso");
                         transaction.setValueTransaction(Double.parseDouble(headerInvoice.getTotalInvoice()));
                         transaction.setDescription("Ingreso por cobro factura Nro:" + headerInvoice.getNumberDocument());
@@ -144,7 +139,9 @@ public class ListChargesActivity extends AppCompatActivity {
     public void loadInvoicesNotPaid(){
         headerInvoices = new ArrayList<>();
         mDialog.show();
-        invoiceProvider.getListInvoicesOrder().addListenerForSingleValueEvent(new ValueEventListener() {
+        String sellerId = mPrefUser.getString("identifier", "");
+        boolean isAdministrator = mPrefUser.getBoolean("isAdmin", false);
+        invoiceProvider.getListInvoicesOrder(isAdministrator, sellerId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
@@ -152,24 +149,25 @@ public class ListChargesActivity extends AppCompatActivity {
                     lblListEmpty.setText("");
                     totalDocuments = 0;
                     for (final DataSnapshot invoiceNode: snapshot.getChildren()){
-                        if(invoiceNode.child("Header").child("paidOut").getValue().toString().equals("false")){
+                        if(invoiceNode.child("header").child("paidOut").getValue().toString().equals("false")){
                             HeaderInvoice headerInvoice = new HeaderInvoice();
-                            headerInvoice.setIdInvoice(Integer.parseInt(invoiceNode.child("Header").child("idInvoice").getValue().toString()));
-                            headerInvoice.setTypeDocumentCode(invoiceNode.child("Header").child("typeDocumentCode").getValue().toString());
-                            headerInvoice.setTotalNotTax(invoiceNode.child("Header").child("totalNotTax").getValue().toString());
-                            headerInvoice.setTotalTax(invoiceNode.child("Header").child("totalTax").getValue().toString());
-                            headerInvoice.setTotalIva(invoiceNode.child("Header").child("totalIva").getValue().toString());
-                            headerInvoice.setSubTotal(invoiceNode.child("Header").child("subTotal").getValue().toString());
-                            headerInvoice.setTotalInvoice(invoiceNode.child("Header").child("totalInvoice").getValue().toString());
-                            headerInvoice.setPaidOut(invoiceNode.child("Header").child("paidOut").getValue().toString());
-                            headerInvoice.setDateDocument(invoiceNode.child("Header").child("dateDocument").getValue().toString());
-                            headerInvoice.setNumberDocument(invoiceNode.child("Header").child("numberDocument").getValue().toString());
-                            headerInvoice.setClientPhone(invoiceNode.child("Header").child("clientPhone").getValue().toString());
-                            headerInvoice.setClientDirection(invoiceNode.child("Header").child("clientDirection").getValue().toString());
-                            headerInvoice.setClientName(invoiceNode.child("Header").child("clientName").getValue().toString());
-                            headerInvoice.setClientDocument(invoiceNode.child("Header").child("clientDocument").getValue().toString());
-                            headerInvoice.setValueDocumentCode(invoiceNode.child("Header").child("valueDocumentCode").getValue().toString());
-                            headerInvoice.setUserId(invoiceNode.child("Header").child("userId").getValue() != null ? invoiceNode.child("Header").child("userId").getValue().toString() : null);
+                            headerInvoice.setIdInvoice(Integer.parseInt(invoiceNode.child("header").child("idInvoice").getValue().toString()));
+                            headerInvoice.setTypeDocumentCode(invoiceNode.child("header").child("typeDocumentCode").getValue().toString());
+                            headerInvoice.setTotalNotTax(invoiceNode.child("header").child("totalNotTax").getValue().toString());
+                            headerInvoice.setTotalTax(invoiceNode.child("header").child("totalTax").getValue().toString());
+                            headerInvoice.setTotalIva(invoiceNode.child("header").child("totalIva").getValue().toString());
+                            headerInvoice.setSubTotal(invoiceNode.child("header").child("subTotal").getValue().toString());
+                            headerInvoice.setTotalInvoice(invoiceNode.child("header").child("totalInvoice").getValue().toString());
+                            headerInvoice.setPaidOut(invoiceNode.child("header").child("paidOut").getValue().toString());
+                            headerInvoice.setDateDocument(invoiceNode.child("header").child("dateDocument").getValue().toString());
+                            headerInvoice.setNumberDocument(invoiceNode.child("header").child("numberDocument").getValue().toString());
+                            headerInvoice.setClientPhone(invoiceNode.child("header").child("clientPhone").getValue().toString());
+                            headerInvoice.setClientDirection(invoiceNode.child("header").child("clientDirection").getValue().toString());
+                            headerInvoice.setClientName(invoiceNode.child("header").child("clientName").getValue().toString());
+                            headerInvoice.setClientDocument(invoiceNode.child("header").child("clientDocument").getValue().toString());
+                            headerInvoice.setValueDocumentCode(invoiceNode.child("header").child("valueDocumentCode").getValue().toString());
+                            headerInvoice.setUserId(invoiceNode.child("header").child("userId").getValue() != null ? invoiceNode.child("header").child("userId").getValue().toString() : null);
+                            headerInvoice.setSeller(invoiceNode.child("header").child("seller").getValue() != null ? invoiceNode.child("header").child("seller").getValue().toString() : null);
                             headerInvoices.add(headerInvoice);
                             totalValue = totalValue + Double.parseDouble(headerInvoice.getTotalInvoice());
                             totalDocuments++;

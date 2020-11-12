@@ -22,4 +22,8 @@ public class UserProvider {
     public Query getListUserSorted(){
         return mDataBase.orderByChild("name");
     }
+
+    public Query getUserSession(String idUser){
+        return mDataBase.child(idUser);
+    }
 }

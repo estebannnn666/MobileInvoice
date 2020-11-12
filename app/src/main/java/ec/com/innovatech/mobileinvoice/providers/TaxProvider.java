@@ -26,7 +26,7 @@ public class TaxProvider {
         return mDataBase.child(barCode).child("taxes");
     }
 
-    public DatabaseReference getTax(String barCode, String id){
-        return mDataBase.child(barCode).child("taxes").child(id);
+    public DatabaseReference getTax(String idItem, String id){
+        return mDataBase.child(idItem).child("taxes").child(id);
     }
 }

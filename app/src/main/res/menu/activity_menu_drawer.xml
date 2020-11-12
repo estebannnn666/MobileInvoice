@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_home"
+            android:icon="@drawable/ic_home"
+            android:title="@string/menu_home"/>
+        <item
+            android:id="@+id/nav_client"
+            android:icon="@drawable/ic_client"
+            android:title="@string/menu_client" />
+        <item
+            android:id="@+id/nav_items"
+            android:icon="@drawable/ic_items"
+            android:title="@string/menu_items" />
+        <item
+            android:id="@+id/nav_invoice"
+            android:icon="@drawable/ic_invoice"
+            android:title="@string/menu_invoices" />
+        <item
+            android:id="@+id/nav_orders"
+            android:icon="@drawable/ic_order"
+            android:title="@string/menu_orders" />
+        <item
+            android:id="@+id/nav_cash"
+            android:icon="@drawable/ic_cash"
+            android:title="@string/menu_cash" />
+        <item
+            android:id="@+id/nav_account"
+            android:icon="@drawable/ic_account"
+            android:title="@string/menu_account" />
+        <item
+            android:id="@+id/nav_config"
+            android:icon="@drawable/ic_configuration"
+            android:title="@string/menu_configuration" />
+    </group>
+
+    <!--group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_exit"
+            android:icon="@drawable/ic_session"
+            android:title="@string/menu_exit"/>
+    </group-->
+</menu>

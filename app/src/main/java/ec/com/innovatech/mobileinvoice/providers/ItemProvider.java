@@ -32,6 +32,11 @@ public class ItemProvider {
         return mDataBase.orderByChild("dataItem/nameItem");
     }
 
+    public Query getItemsByBarCode(String barCode){
+        return mDataBase.orderByChild("dataItem/barCode").equalTo(barCode);
+    }
+
+
     public DatabaseReference getItem(String id){
         return mDataBase.child(id).child("dataItem");
     }

@@ -16,8 +16,8 @@
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
         <ImageView
-            android:layout_width="150dp"
-            android:layout_height="150dp"
+            android:layout_width="130dp"
+            android:layout_height="130dp"
             android:layout_gravity="center"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="20dp"
@@ -26,12 +26,13 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:orientation="horizontal">
             <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginTop="10dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginTop="18dp"
                 android:src="@drawable/user_icon">
             </ImageView>
             <com.google.android.material.textfield.TextInputLayout
@@ -51,12 +52,39 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:orientation="horizontal">
             <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginTop="10dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginTop="18dp"
+                android:src="@drawable/icon_document">
+            </ImageView>
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/txtInputIdentifier"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/identifier"
+                    android:inputType="number">
+                </com.google.android.material.textfield.TextInputEditText>
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:orientation="horizontal">
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginTop="18dp"
                 android:src="@drawable/email_icon">
             </ImageView>
             <com.google.android.material.textfield.TextInputLayout
@@ -75,12 +103,13 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:orientation="horizontal">
             <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginTop="10dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginTop="18dp"
                 android:src="@drawable/password_icon">
             </ImageView>
             <com.google.android.material.textfield.TextInputLayout

@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Factura movil</string>
     <string name="complete_name">Nombre completo</string>
+    <string name="identifier">Número identificación</string>
     <string name="user_email">Email</string>
     <string name="password">Contraseña</string>
 
@@ -50,5 +51,18 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
 
+    <string name="menu_home">Inicio</string>
+    <string name="menu_client">Clientes</string>
+    <string name="menu_items">Productos</string>
+    <string name="menu_invoices">Facturas</string>
+    <string name="menu_orders">Pedidos</string>
+    <string name="menu_cash">Caja</string>
+    <string name="menu_account">Cuentas por cobrar</string>
+    <string name="menu_users">Usuario</string>
+    <string name="menu_configuration">Configuración</string>
+    <string name="menu_exit">Cerrar sesión</string>
 </resources>

@@ -25,8 +25,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
@@ -39,7 +37,6 @@ import ec.com.innovatech.mobileinvoice.R;
 import ec.com.innovatech.mobileinvoice.includes.MyToastMessage;
 import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
 import ec.com.innovatech.mobileinvoice.invoices.DatePickerFragment;
-import ec.com.innovatech.mobileinvoice.invoices.InvoiceActivity;
 import ec.com.innovatech.mobileinvoice.invoices.ItemDialogAdapter;
 import ec.com.innovatech.mobileinvoice.invoices.SearchClientActivity;
 import ec.com.innovatech.mobileinvoice.models.Client;
@@ -60,7 +57,7 @@ public class OrderActivity extends AppCompatActivity {
 
     SharedPreferences mPref;
     SharedPreferences.Editor editor;
-    FirebaseAuth fireAuth;
+    SharedPreferences mPrefUser;
     AlertDialog mDialog;
     Button btnAddClient;
     Button btnOpenItems;
@@ -125,7 +122,7 @@ public class OrderActivity extends AppCompatActivity {
         setContentView(R.layout.activity_order);
         MyToolBar.show(this,"Nuevo pedido", true);
         mPref = getApplicationContext().getSharedPreferences("invoice", MODE_PRIVATE);
-        fireAuth = FirebaseAuth.getInstance();
+        mPrefUser = getApplicationContext().getSharedPreferences("user_session", MODE_PRIVATE);
         editor = mPref.edit();
         mDialog = new SpotsDialog.Builder().setContext(OrderActivity.this).setMessage("Espere un momento").build();
         btnAddClient = findViewById(R.id.btnAddClientOrder);
@@ -336,7 +333,7 @@ public class OrderActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                item = listItems.get(position);
+                item = itemAdapter.getListItems().get(position);
                 dialog.dismiss();
                 viewDialogSelectItem();
             }
@@ -636,11 +633,13 @@ public class OrderActivity extends AppCompatActivity {
             int driverUnit = Integer.parseInt(driveUnitSelect.getUnitDriveValue());
             int totalUnits = quantityNumber * driverUnit;
             int stockExists = Integer.parseInt(item.getStock());
-            discount = (valueUnit - Double.parseDouble(priceUnit)) * quantityNumber * driverUnit;
+            if(Double.parseDouble(priceUnit) < valueUnit ){
+                discount = (valueUnit - Double.parseDouble(priceUnit)) * quantityNumber * driverUnit;
+            }
             if(totalUnits > stockExists){
                 MyToastMessage.error(OrderActivity.this, "No existe stock suficiente para el artículo");
             }else {
-                calcTotalInvoice(item.getBarCode(), subTotal, dialog, quantity, priceUnit, discount);
+                calcTotalInvoice(String.valueOf(item.getId()), subTotal, dialog, quantity, priceUnit, discount);
             }
         } else {
             MyToastMessage.error(OrderActivity.this, "Ingrese todos los campos requeridos");
@@ -649,12 +648,12 @@ public class OrderActivity extends AppCompatActivity {
 
     /**
      * Method for calc the total of invoice
-     * @param barCode The bar code
+     * @param idItem The bar code
      * @param subTotal The subtotal for item
      * @param dialog The dialog to close
      */
-    private void calcTotalInvoice(String barCode, final String subTotal, final AlertDialog dialog, final String quantity, final String valueUnit, final double discount){
-        taxProvider.getTax(barCode, "1").addListenerForSingleValueEvent(new ValueEventListener() {
+    private void calcTotalInvoice(String idItem, final String subTotal, final AlertDialog dialog, final String quantity, final String valueUnit, final double discount){
+        taxProvider.getTax(idItem, "0").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String existsTax = "false";
@@ -739,10 +738,9 @@ public class OrderActivity extends AppCompatActivity {
                         headerOrder.setTotalIva(taxFac);
                         headerOrder.setTotalTax(totalTaxFac);
                         headerOrder.setTotalNotTax(totalNotTaxFac);
-                        FirebaseUser userLogin = fireAuth.getCurrentUser();
-                        if(userLogin != null){
-                            headerOrder.setUserId(userLogin.getEmail());
-                        }
+                        headerOrder.setUserId(mPrefUser.getString("identifier", ""));
+                        headerOrder.setSeller(mPrefUser.getString("nameSeller", ""));
+
                         createHeaderOrder(headerOrder);
                     } else {
                         MyToastMessage.error(this, "Ingrese detalles al pedido");

@@ -2,7 +2,10 @@ package ec.com.innovatech.mobileinvoice.invoices;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.bluetooth.BluetoothAdapter;
@@ -10,6 +13,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
@@ -30,6 +34,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.util.CollectionUtils;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -70,15 +75,18 @@ import ec.com.innovatech.mobileinvoice.providers.TransactionProvider;
 import ec.com.innovatech.mobileinvoice.util.ValidationUtil;
 
 public class InvoiceActivity extends AppCompatActivity{
+
+    private static final int ZBAR_CAMERA_PERMISSION = 1;
     SharedPreferences mPref;
     SharedPreferences mPrefEnterprise;
+    SharedPreferences mPrefUser;
     SharedPreferences.Editor editor;
     SharedPreferences.Editor enterpriseSession;
-    FirebaseAuth fireAuth;
     AlertDialog mDialog;
     Button btnAddClient;
     Button btnOpenItems;
-    EditText txtNumberInvoice;
+    Button btnOpenReadQR;
+    //EditText txtNumberInvoice;
     EditText txInvoiceDate;
     EditText txtInvoiceClient;
     CheckBox chkPayOut;
@@ -155,13 +163,14 @@ public class InvoiceActivity extends AppCompatActivity{
         }
         mPref = getApplicationContext().getSharedPreferences("invoice", MODE_PRIVATE);
         mPrefEnterprise = getApplicationContext().getSharedPreferences("enterprise", MODE_PRIVATE);
+        mPrefUser = getApplicationContext().getSharedPreferences("user_session", MODE_PRIVATE);
         editor = mPref.edit();
         enterpriseSession = mPrefEnterprise.edit();
-        fireAuth = FirebaseAuth.getInstance();
         MyToolBar.show(this,"Nueva venta", true);
         mDialog = new SpotsDialog.Builder().setContext(InvoiceActivity.this).setMessage("Espere un momento").build();
         btnAddClient = findViewById(R.id.btnAddClient);
-        txtNumberInvoice = findViewById(R.id.invoiceDocument);
+        btnOpenReadQR = findViewById(R.id.btnOpenReadQR);
+        //txtNumberInvoice = findViewById(R.id.invoiceDocument);
         txInvoiceDate = findViewById(R.id.invoiceDate);
         txtInvoiceClient = findViewById(R.id.invoiceClient);
         btnOpenItems = findViewById(R.id.btnOpenDialogItems);
@@ -181,6 +190,8 @@ public class InvoiceActivity extends AppCompatActivity{
         listDetailInvoice = new ArrayList<>();
         transactionProvider = new TransactionProvider();
         driverUnitProvider = new DriverUnitProvider();
+        itemProvider = new ItemProvider();
+        taxProvider = new TaxProvider();
         invoiceProvider = new InvoiceProvider();
         enterpriseProvider = new EnterpriseProvider();
         sequenceProvider = new SequenceProvider();
@@ -201,7 +212,7 @@ public class InvoiceActivity extends AppCompatActivity{
                     radioInvoice.setChecked(false);
                     radioNoteSale.setChecked(true);
                 }
-                txtNumberInvoice.setText(invoiceEdit.getNumberDocument());
+                //txtNumberInvoice.setText(invoiceEdit.getNumberDocument());
                 txInvoiceDate.setText(invoiceEdit.getDateDocument());
                 txtInvoiceClient.setText(invoiceEdit.getClientName());
                 lblSubTotalFac.setText(invoiceEdit.getSubTotal());
@@ -218,7 +229,7 @@ public class InvoiceActivity extends AppCompatActivity{
                 }
                 loadDetailInvoice(String.valueOf(invoiceEdit.getIdInvoice()));
                 // Disabled the inputs when are invoice view mode
-                txtNumberInvoice.setEnabled(false);
+                //txtNumberInvoice.setEnabled(false);
                 txInvoiceDate.setEnabled(false);
                 txtInvoiceClient.setEnabled(false);
                 chkPayOut.setEnabled(false);
@@ -239,14 +250,14 @@ public class InvoiceActivity extends AppCompatActivity{
                 clientSearch = new Client();
                 clientSearch.setDocument(invoiceEdit.getClientDocument());
             }
-            String numberInvoice = mPref.getString("numberInvoice", "");
+            //String numberInvoice = mPref.getString("numberInvoice", "");
             String invoiceDate = mPref.getString("invoiceDate", "");
             String typeDocument =mPref.getString("typeDocument", "");
             boolean payOut = mPref.getBoolean("payOut", false);
-            if(!numberInvoice.isEmpty()){
+            /*if(!numberInvoice.isEmpty()){
                 txtNumberInvoice.setText(numberInvoice);
                 editor.putString("numberInvoice", "");
-            }
+            }*/
             if(!invoiceDate.isEmpty()){
                 txInvoiceDate.setText(invoiceDate);
                 editor.putString("invoiceDate", "");
@@ -265,6 +276,40 @@ public class InvoiceActivity extends AppCompatActivity{
                 chkPayOut.setChecked(true);
                 editor.putBoolean("payOut", false);
             }
+
+            String barCode = resourceBundle.getString("BAR_CODE");
+            if(barCode != null){
+                mDialog.show();
+                itemProvider.getItemsByBarCode(barCode).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if(snapshot.exists()){
+                            for (final DataSnapshot itemNode: snapshot.getChildren()) {
+                                item = itemNode.child("dataItem").getValue(Item.class);
+                                /*item.setId(Integer.parseInt(itemNode.child("dataItem").child("id").getValue().toString()));
+                                item.setBarCode(itemNode.child("dataItem").child("barCode").getValue().toString());
+                                item.setNameItem(itemNode.child("dataItem").child("nameItem").getValue().toString());
+                                item.setCost(itemNode.child("dataItem").child("cost").getValue().toString());
+                                item.setPriceRetail(itemNode.child("dataItem").child("priceRetail").getValue().toString());
+                                item.setPriceWholesaler(itemNode.child("dataItem").child("priceWholesaler").getValue().toString());
+                                item.setCommissionPercentage(itemNode.child("dataItem").child("commissionPercentage").getValue().toString());
+                                item.setStock(itemNode.child("dataItem").child("stock").getValue().toString());*/
+                                mDialog.dismiss();
+                                viewDialogSelectItem();
+                                break;
+                            }
+                        }else{
+                            MyToastMessage.info(InvoiceActivity.this, "El artículo escaneado no se encuentra registrado.");
+                            mDialog.dismiss();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+            }
         }else{
             updateSequenceInvoice = Boolean.TRUE;
             getSequence();
@@ -273,7 +318,7 @@ public class InvoiceActivity extends AppCompatActivity{
         btnAddClient.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String numberInvoice = txtNumberInvoice.getText().toString();
+                //String numberInvoice = txtNumberInvoice.getText().toString();
                 String invoiceDate = txInvoiceDate.getText().toString();
                 String typeDocument = "";
                 Intent intent = new Intent(InvoiceActivity.this, SearchClientActivity.class);
@@ -288,7 +333,7 @@ public class InvoiceActivity extends AppCompatActivity{
                 if(!radioInvoice.isChecked() && !radioNoteSale.isChecked()){
                     editor.putString("typeDocument", "");
                 }
-                editor.putString("numberInvoice", numberInvoice);
+                //editor.putString("numberInvoice", numberInvoice);
                 editor.putString("invoiceDate", invoiceDate);
                 if(chkPayOut.isChecked()){
                     editor.putBoolean("payOut", true);
@@ -313,10 +358,10 @@ public class InvoiceActivity extends AppCompatActivity{
                     if (radioNoteSale.isChecked()) {
                         typeDocument = (String) radioNoteSale.getText();
                     }
-                    String numberInvoice = txtNumberInvoice.getText().toString();
+                    //String numberInvoice = txtNumberInvoice.getText().toString();
                     String invoiceDate = txInvoiceDate.getText().toString();
                     String invoiceClient = txtInvoiceClient.getText().toString();
-                    if (!numberInvoice.isEmpty() && !invoiceDate.isEmpty() && !invoiceClient.isEmpty() && !typeDocument.isEmpty()) {
+                    if (!invoiceDate.isEmpty() && !invoiceClient.isEmpty() && !typeDocument.isEmpty()) {
                         if (clientSearch != null) {
                             viewDialogListItems();
                         } else {
@@ -353,6 +398,62 @@ public class InvoiceActivity extends AppCompatActivity{
                 }
             }
         });
+
+        btnOpenReadQR.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(editInvoice && !printActive) {
+                    String typeDocument = "";
+                    if (radioInvoice.isChecked()) {
+                        typeDocument = (String) radioInvoice.getText();
+                    }
+                    if (radioNoteSale.isChecked()) {
+                        typeDocument = (String) radioNoteSale.getText();
+                    }
+                    //String numberInvoice = txtNumberInvoice.getText().toString();
+                    String invoiceDate = txInvoiceDate.getText().toString();
+                    String invoiceClient = txtInvoiceClient.getText().toString();
+                    if (!invoiceDate.isEmpty() && !invoiceClient.isEmpty() && !typeDocument.isEmpty()) {
+                        if (clientSearch != null) {
+                            if(radioInvoice.isChecked()){
+                                typeDocument = (String)radioInvoice.getText();
+                                editor.putString("typeDocument", typeDocument);
+                            }
+                            if(radioNoteSale.isChecked()){
+                                typeDocument = (String)radioNoteSale.getText();
+                                editor.putString("typeDocument", typeDocument);
+                            }
+                            if(!radioInvoice.isChecked() && !radioNoteSale.isChecked()){
+                                editor.putString("typeDocument", "");
+                            }
+                            editor.putString("invoiceDate", invoiceDate);
+                            if(chkPayOut.isChecked()){
+                                editor.putBoolean("payOut", true);
+                            }else{
+                                editor.putBoolean("payOut", false);
+                            }
+                            editor.apply();
+
+                            if (ContextCompat.checkSelfPermission(InvoiceActivity.this, Manifest.permission.CAMERA)
+                                    != PackageManager.PERMISSION_GRANTED) {
+                                ActivityCompat.requestPermissions(InvoiceActivity.this,
+                                        new String[]{Manifest.permission.CAMERA}, ZBAR_CAMERA_PERMISSION);
+                            } else {
+                                Intent intent = new Intent(InvoiceActivity.this, BarCodeSearchActivity.class);
+                                intent.putExtra("CLIENT_SELECT", clientSearch);
+                                startActivity(intent);
+                            }
+                        } else {
+                            MyToastMessage.info(InvoiceActivity.this, "Seleccione el cliente para agregar detalles");
+                        }
+                    } else {
+                        MyToastMessage.info(InvoiceActivity.this, "Ingrese los datos de la cabecera del comprobante");
+                    }
+                }else{
+                    MyToastMessage.info(InvoiceActivity.this, "No se puede agregar artículos porque el comprobante ya se encuentra guardado");
+                }
+            }
+        });
     }
 
     // Open dialog select date
@@ -379,8 +480,6 @@ public class InvoiceActivity extends AppCompatActivity{
         listView = view.findViewById(R.id.listAddItems);
         lblListEmpty =  view.findViewById(R.id.txtListAddEmpty);
         txtSearchItem = view.findViewById(R.id.txtSearchItems);
-        itemProvider = new ItemProvider();
-        taxProvider = new TaxProvider();
         listItems = new ArrayList<>();
         loadDataItems();
         txtSearchItem.addTextChangedListener(new TextWatcher() {
@@ -403,7 +502,7 @@ public class InvoiceActivity extends AppCompatActivity{
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                item = listItems.get(position);
+                item = itemAdapter.getListItems().get(position);
                 dialog.dismiss();
                 viewDialogSelectItem();
             }
@@ -630,7 +729,7 @@ public class InvoiceActivity extends AppCompatActivity{
     }
 
     private void addDetailInvoice(AlertDialog dialog){
-        String numberInvoice = txtNumberInvoice.getText().toString();
+        //String numberInvoice = txtNumberInvoice.getText().toString();
         String quantity = txtAddQuantity.getText().toString();
         String priceUnit = txtAddPriceUnit.getText().toString();
         String subTotal = txtSubTotal.getText().toString();
@@ -647,11 +746,13 @@ public class InvoiceActivity extends AppCompatActivity{
             int driverUnit = Integer.parseInt(driveUnitSelect.getUnitDriveValue());
             int totalUnits = quantityNumber * driverUnit;
             int stockExists = Integer.parseInt(item.getStock());
-            discount = (valueUnit - Double.parseDouble(priceUnit)) * quantityNumber * driverUnit;
+            if(Double.parseDouble(priceUnit) < valueUnit ) {
+                discount = (valueUnit - Double.parseDouble(priceUnit)) * quantityNumber * driverUnit;
+            }
             if(totalUnits > stockExists){
                 MyToastMessage.error(InvoiceActivity.this, "No existe stock suficiente para el artículo");
             }else {
-                calcTotalInvoice(item.getBarCode(), subTotal, dialog, quantity, priceUnit, numberInvoice, discount);
+                calcTotalInvoice(String.valueOf(item.getId()), subTotal, dialog, quantity, priceUnit, discount);
             }
         } else {
             MyToastMessage.error(InvoiceActivity.this, "Ingrese todos los campos requeridos");
@@ -660,24 +761,23 @@ public class InvoiceActivity extends AppCompatActivity{
 
     /**
      * Method for calc the total of invoice
-     * @param barCode The bar code
+     * @param idItem The bar code
      * @param subTotal The subtotal for item
      * @param dialog The dialog to close
      */
-    private void calcTotalInvoice(String barCode, final String subTotal, final AlertDialog dialog, final String quantity, final String valueUnit, final String numberInvoice, final double discount){
-        taxProvider.getTax(barCode, "1").addListenerForSingleValueEvent(new ValueEventListener() {
+    private void calcTotalInvoice(String idItem, final String subTotal, final AlertDialog dialog, final String quantity, final String valueUnit, final double discount){
+        taxProvider.getTax(idItem, "0").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String existsTax = "false";
                 if(snapshot.exists()){
                     existsTax = "true";
                 }
-                DetailInvoice detailInvoice = new DetailInvoice(item.getId(), item.getBarCode(), driveUnitSelect.getUnitDriveValueCode(), driveUnitSelect.getUnitDriveValue(), quantity, numberInvoice, item.getNameItem(), valueUnit, subTotal, String.valueOf(discount), existsTax);
+                DetailInvoice detailInvoice = new DetailInvoice(item.getId(), item.getBarCode(), driveUnitSelect.getUnitDriveValueCode(), driveUnitSelect.getUnitDriveValue(), quantity, null, item.getNameItem(), valueUnit, subTotal, String.valueOf(discount), existsTax);
                 listDetailInvoice.add(detailInvoice);
                 detailInvoiceAdapter = new DetailInvoiceAdapter(getApplicationContext(), listDetailInvoice);
                 listDetailInvoiceView.setAdapter(detailInvoiceAdapter);
                 numDetail++;
-
                 double subTotalItem = Double.parseDouble(subTotal);
                 double subTotalFac = Double.parseDouble(lblSubTotalFac.getText().toString());
                 double discountFac = Double.parseDouble(lblDiscountFac.getText().toString());
@@ -725,71 +825,89 @@ public class InvoiceActivity extends AppCompatActivity{
         if(item.getItemId() == R.id.saveItem){
             if(editInvoice && !printActive) {
                 mDialog.show();
+
                 String typeDocument = "";
+                String nameSequence = "";
                 if (radioInvoice.isChecked()) {
                     typeDocument = (String) radioInvoice.getText();
+                    nameSequence = "sequenceInvoice";
                 }
                 if (radioNoteSale.isChecked()) {
                     typeDocument = (String) radioNoteSale.getText();
+                    nameSequence = "sequenceNoteCredit";
                 }
-                String numberInvoice = txtNumberInvoice.getText().toString();
-                String invoiceDate = txInvoiceDate.getText().toString();
-                String invoiceClient = txtInvoiceClient.getText().toString();
-                String subTotalFac = lblSubTotalFac.getText().toString();
-                String discount = lblDiscountFac.getText().toString();
-                String totalNotTaxFac = lblTotalNotTaxFac.getText().toString();
-                String totalTaxFac = lblTotalTaxFac.getText().toString();
-                String taxFac = lblTaxFac.getText().toString();
-                String totalFac = lblTotalFac.getText().toString();
-                String payOut = "" + chkPayOut.isChecked();
+                //String numberInvoice = txtNumberInvoice.getText().toString();
+                final String invoiceDate = txInvoiceDate.getText().toString();
+                final String invoiceClient = txtInvoiceClient.getText().toString();
 
-                if (!typeDocument.isEmpty() && !numberInvoice.isEmpty() && !invoiceDate.isEmpty() && !invoiceClient.isEmpty()) {
+                if (!typeDocument.isEmpty() && !invoiceDate.isEmpty() && !invoiceClient.isEmpty()) {
                     if (listDetailInvoice.size() > 0) {
-                        headerInvoice.setIdInvoice(sequenceInvoice);
-                        headerInvoice.setNumberDocument(numberInvoice);
-                        headerInvoice.setDateDocument(invoiceDate);
-                        headerInvoice.setPaidOut(payOut);
-                        headerInvoice.setValueDocumentCode(typeDocument);
-                        headerInvoice.setTypeDocumentCode("8");
-                        headerInvoice.setClientDocument(clientSearch.getDocument());
-                        headerInvoice.setClientName(invoiceClient);
-                        headerInvoice.setClientDirection(clientSearch.getAddress());
-                        headerInvoice.setClientPhone(clientSearch.getTelephone());
-                        headerInvoice.setTotalInvoice(totalFac);
-                        headerInvoice.setDiscount(discount);
-                        headerInvoice.setSubTotal(subTotalFac);
-                        headerInvoice.setTotalIva(taxFac);
-                        headerInvoice.setTotalTax(totalTaxFac);
-                        headerInvoice.setTotalNotTax(totalNotTaxFac);
-                        FirebaseUser userLogin = fireAuth.getCurrentUser();
-                        if(userLogin != null){
-                            headerInvoice.setUserId(userLogin.getEmail());
-                        }
-                        createHeaderInvoice(headerInvoice);
+                        final String finalTypeDocument = typeDocument;
+                        final String finalNameSequence = nameSequence;
+                        sequenceProvider.getSequence(nameSequence).addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                int[] sequence = {1};
+                                if(snapshot.exists()){
+                                    sequence[0] = Integer.parseInt(snapshot.getValue().toString());
+                                }
+                                String numberInvoice = ValidationUtil.sequenceInvoice(5, ""+String.valueOf(sequence[0]));
+                                String subTotalFac = lblSubTotalFac.getText().toString();
+                                String discount = lblDiscountFac.getText().toString();
+                                String totalNotTaxFac = lblTotalNotTaxFac.getText().toString();
+                                String totalTaxFac = lblTotalTaxFac.getText().toString();
+                                String taxFac = lblTaxFac.getText().toString();
+                                String totalFac = lblTotalFac.getText().toString();
+                                String payOut = "" + chkPayOut.isChecked();
 
-                        // Save the transaction if the invoice is payout
-                        if(chkPayOut.isChecked()) {
-                            SimpleDateFormat formatDate = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-                            Calendar dateTransaction = Calendar.getInstance();
-                            String currentDate = formatDate.format(dateTransaction.getTime());
-                            Transaction transaction = new Transaction();
-                            if (userLogin != null) {
-                                transaction.setUserId(userLogin.getEmail());
+                                headerInvoice.setIdInvoice(sequenceInvoice);
+                                headerInvoice.setNumberDocument(numberInvoice);
+                                headerInvoice.setDateDocument(invoiceDate);
+                                headerInvoice.setPaidOut(payOut);
+                                headerInvoice.setValueDocumentCode(finalTypeDocument);
+                                headerInvoice.setTypeDocumentCode("8");
+                                headerInvoice.setClientDocument(clientSearch.getDocument());
+                                headerInvoice.setClientName(invoiceClient);
+                                headerInvoice.setClientDirection(clientSearch.getAddress());
+                                headerInvoice.setClientPhone(clientSearch.getTelephone());
+                                headerInvoice.setTotalInvoice(totalFac);
+                                headerInvoice.setDiscount(discount);
+                                headerInvoice.setSubTotal(subTotalFac);
+                                headerInvoice.setTotalIva(taxFac);
+                                headerInvoice.setTotalTax(totalTaxFac);
+                                headerInvoice.setTotalNotTax(totalNotTaxFac);
+                                headerInvoice.setUserId(mPrefUser.getString("identifier", ""));
+                                headerInvoice.setSeller(mPrefUser.getString("nameSeller", ""));
+
+                                createHeaderInvoice(headerInvoice, sequence[0], finalNameSequence);
+
+                                // Save the transaction if the invoice is payout
+                                if(chkPayOut.isChecked()) {
+                                    SimpleDateFormat formatDate = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+                                    Calendar dateTransaction = Calendar.getInstance();
+                                    String currentDate = formatDate.format(dateTransaction.getTime());
+                                    Transaction transaction = new Transaction();
+                                    transaction.setUserId(mPrefUser.getString("identifier", ""));
+                                    transaction.setType("Ingreso");
+                                    transaction.setValueTransaction(Double.parseDouble(totalFac));
+                                    transaction.setDescription("Ingreso por venta factura Nro:" + headerInvoice.getNumberDocument());
+                                    transaction.setDateTransaction(currentDate);
+                                    createTransaction(transaction);
+                                }
                             }
-                            transaction.setType("Ingreso");
-                            transaction.setValueTransaction(Double.parseDouble(totalFac));
-                            transaction.setDescription("Ingreso por venta factura Nro:" + headerInvoice.getNumberDocument());
-                            transaction.setDateTransaction(currentDate);
-                            createTransaction(transaction);
-                        }
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {
+                            }
+                        });
                     } else {
-                        MyToastMessage.error(this, "Ingrese detalles al comprobante");
+                        MyToastMessage.error(InvoiceActivity.this, "Ingrese detalles al comprobante");
                         mDialog.dismiss();
                     }
                 } else {
-                    MyToastMessage.error(this, "Ingrese todos los campos del comprobante");
+                    MyToastMessage.error(InvoiceActivity.this, "Ingrese todos los campos del comprobante");
                     mDialog.dismiss();
                 }
+
             }else{
                 MyToastMessage.info(this, "La factura ya se encuentra guardada");
                 mDialog.dismiss();
@@ -821,14 +939,14 @@ public class InvoiceActivity extends AppCompatActivity{
      * Method for create and save the invoice
      * @param invoice The data header of the invoice
      */
-    void createHeaderInvoice(final HeaderInvoice invoice) {
+    void createHeaderInvoice(final HeaderInvoice invoice, final int sequence, final String nameSequence) {
         invoiceProvider.createHeaderInvoice(invoice).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
             if (task.isSuccessful()) {
                 if(updateSequenceInvoice){
                     sequenceInvoice++;
-                    updateSequence(sequenceInvoice, invoice);
+                    updateSequence(sequenceInvoice, sequence, invoice, nameSequence);
                 }
             } else {
                 MyToastMessage.error(InvoiceActivity.this, "No se pudo crear el comprobante");
@@ -951,7 +1069,7 @@ public class InvoiceActivity extends AppCompatActivity{
         try {
             editor.putString("typeDocument", "");
             editor.putString("typeDocument", "");
-            editor.putString("numberInvoice", "");
+            //editor.putString("numberInvoice", "");
             editor.putString("invoiceDate", "");
             editor.putBoolean("payOut", false);
             disconnect();
@@ -1053,6 +1171,10 @@ public class InvoiceActivity extends AppCompatActivity{
     void printData()throws IOException{
         try {
             StringBuffer textPrint = new StringBuffer();
+            String numberDocument = "N/D";
+            if(!CollectionUtils.isEmpty(listDetailInvoice)){
+                numberDocument = listDetailInvoice.iterator().next().getNumberDocument();
+            }
             textPrint.append(ValidationUtil.completeSpaceTwoWay(31, enterprise.getName(), "*"));
             textPrint.append("\n");
             textPrint.append("\n");
@@ -1069,7 +1191,7 @@ public class InvoiceActivity extends AppCompatActivity{
             textPrint.append("\n");
             textPrint.append("\n");
             textPrint.append("\n");
-            textPrint.append("DOCUMENTO NRO:"+ValidationUtil.completeSpaceString(17, txtNumberInvoice.getText().toString()));
+            textPrint.append("DOCUMENTO NRO:"+ValidationUtil.completeSpaceString(17, numberDocument));
             textPrint.append("\n");
             textPrint.append("CLIENTE:"+ValidationUtil.completeSpaceString(23, txtInvoiceClient.getText().toString()));
             textPrint.append("\n");
@@ -1267,15 +1389,28 @@ public class InvoiceActivity extends AppCompatActivity{
         });
     }
 
-    void updateSequence(int numberSequence, final HeaderInvoice invoice){
+    void updateSequence(int numberSequence, final int sequence, final HeaderInvoice invoice, final String nameSequence){
         sequenceProvider.createUpdateSequence("invoice", ""+numberSequence).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                if (!task.isSuccessful()) {
-                    MyToastMessage.error(InvoiceActivity.this, "Error al actualizar secuencia");
-                }else{
-                    createDetailInvoice(String.valueOf(invoice.getIdInvoice()), listDetailInvoice);
-                }
+            if (!task.isSuccessful()) {
+                MyToastMessage.error(InvoiceActivity.this, "Error al actualizar secuencia");
+            }else{
+                int sequenceDocument = sequence + 1;
+                sequenceProvider.createUpdateSequence(nameSequence, ""+sequenceDocument).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (!task.isSuccessful()) {
+                            MyToastMessage.error(InvoiceActivity.this, "Error al actualizar secuencia");
+                        }else{
+                            for (DetailInvoice detailInvoice: listDetailInvoice){
+                                detailInvoice.setNumberDocument(invoice.getNumberDocument());
+                            }
+                            createDetailInvoice(String.valueOf(invoice.getIdInvoice()), listDetailInvoice);
+                        }
+                    }
+                });
+            }
             }
         });
     }

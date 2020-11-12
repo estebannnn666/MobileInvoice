@@ -55,6 +55,7 @@ public class InvoiceAdapter extends BaseAdapter implements Filterable {
         TextView lblClientName = (TextView) convertView.findViewById(R.id.lblClientName);
         TextView lblTotalInvoice = (TextView) convertView.findViewById(R.id.lblTotalInvoice);
         TextView lblPayment = (TextView) convertView.findViewById(R.id.lblPayment);
+        TextView lblSeller = (TextView) convertView.findViewById(R.id.lblSeller);
         lblNumberInvoice.setText(headerInvoice.getNumberDocument());
         lblDateInvoice.setText(headerInvoice.getDateDocument());
         lblRucDoc.setText(headerInvoice.getClientDocument());
@@ -62,6 +63,7 @@ public class InvoiceAdapter extends BaseAdapter implements Filterable {
         String priceMaxFormat = ValidationUtil.getTwoDecimal(Double.valueOf(headerInvoice.getTotalInvoice()));
         lblTotalInvoice.setText(priceMaxFormat);
         lblPayment.setText(headerInvoice.getPaidOut().equals("true") ? "SI" : "NO");
+        lblSeller.setText(headerInvoice.getSeller());
         return convertView;
     }
 

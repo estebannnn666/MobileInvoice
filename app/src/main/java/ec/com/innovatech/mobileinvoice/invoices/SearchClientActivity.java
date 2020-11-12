@@ -57,11 +57,11 @@ public class SearchClientActivity extends AppCompatActivity {
                 boolean valor = getIntent().getExtras().getBoolean("returnOrder");
                 if(valor){
                     Intent intent = new Intent(SearchClientActivity.this, OrderActivity.class);
-                    intent.putExtra("CLIENT_SELECT", listClients.get(position));
+                    intent.putExtra("CLIENT_SELECT", clientAdapter.getListClients().get(position));
                     startActivity(intent);
                 }else {
                     Intent intent = new Intent(SearchClientActivity.this, InvoiceActivity.class);
-                    intent.putExtra("CLIENT_SELECT", listClients.get(position));
+                    intent.putExtra("CLIENT_SELECT", clientAdapter.getListClients().get(position));
                     startActivity(intent);
                 }
             }

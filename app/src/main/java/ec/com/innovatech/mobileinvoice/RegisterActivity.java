@@ -35,6 +35,7 @@ public class RegisterActivity extends AppCompatActivity {
     SharedPreferences mPref;
     SharedPreferences.Editor enterpriseSession;
     TextInputEditText textInputName;
+    TextInputEditText textInputIdentifier;
     TextInputEditText textInputEmail;
     TextInputEditText textInputPassword;
     Button buttonRegister;
@@ -51,6 +52,7 @@ public class RegisterActivity extends AppCompatActivity {
         mPref = getApplicationContext().getSharedPreferences("enterprise", MODE_PRIVATE);
         enterpriseSession = mPref.edit();
         textInputName = findViewById(R.id.txtInputName);
+        textInputIdentifier = findViewById(R.id.txtInputIdentifier);
         textInputEmail = findViewById(R.id.txtInputEmail);
         textInputPassword = findViewById(R.id.txtInputPassword);
         buttonRegister = findViewById(R.id.btnRegister);
@@ -68,28 +70,33 @@ public class RegisterActivity extends AppCompatActivity {
 
     void registerUser(){
         final String name = textInputName.getText().toString();
+        final String identifier = textInputIdentifier.getText().toString();
         final String email = textInputEmail.getText().toString();
         final String password = textInputPassword.getText().toString();
-        if(!name.isEmpty() && !email.isEmpty() && !password.isEmpty()){
-            if(password.length()>=6){
-                mDialog.show();
-                register(name, email, password);
-            }  else{
-                MyToastMessage.error(RegisterActivity.this, "La contraseña debe tener al menos 6 caracteres");
+        if(!name.isEmpty() && !identifier.isEmpty() && !email.isEmpty() && !password.isEmpty()){
+            if(identifier.length() == 10) {
+                if (password.length() >= 6) {
+                    mDialog.show();
+                    register(name, identifier, email, password);
+                } else {
+                    MyToastMessage.error(RegisterActivity.this, "La contraseña debe tener al menos 6 caracteres");
+                }
+            }else{
+                MyToastMessage.error(RegisterActivity.this, "El número de identificación debe tener 10 caracteres");
             }
         }else{
             MyToastMessage.error(RegisterActivity.this, "Ingrese todos los campos requeridos");
         }
     }
 
-    void register(final String name, final String email, String password){
+    void register(final String name, final String identifier, final String email, String password){
         mAuthProvider.register(email,password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if(task.isSuccessful()){
                     mDialog.hide();
                     String id = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                    User user = new User(id, name, email);
+                    User user = new User(id, name, identifier, email, "false");
                     create(user);
                 }else{
                     MyToastMessage.error(RegisterActivity.this, "No se pudo registrar el usuario");

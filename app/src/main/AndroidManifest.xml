@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:allowBackup="true"
@@ -13,8 +14,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:name=".invoices.BarCodeSearchActivity"
+            android:parentActivityName=".invoices.InvoiceActivity"></activity>
+        <activity
             android:name=".user.ListUserActivity"
-            android:parentActivityName=".MenuActivity"/>
+            android:parentActivityName=".MenuActivity" />
         <activity
             android:name=".cash.ListTransactionActivity"
             android:parentActivityName=".cash.TransactionActivity" />

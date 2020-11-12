@@ -16,11 +16,11 @@ public class EnterpriseProvider {
     }
 
     public Task<Void> createEnterprise(Enterprise enterprise){
-        return mDataBase.child(enterprise.getRuc()).setValue(enterprise);
+        return mDataBase.child("0").setValue(enterprise);
     }
 
     public Query getListEnterprise(){
-        return mDataBase.orderByChild("ruc");
+        return mDataBase.orderByChild("0");
     }
 
     public DatabaseReference getEnterprise(String ruc){

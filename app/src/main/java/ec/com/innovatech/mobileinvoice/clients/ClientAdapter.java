@@ -96,4 +96,8 @@ public class ClientAdapter extends BaseAdapter implements Filterable {
             }
         };
     }
+
+    public ArrayList<Client> getListClients() {
+        return listClients;
+    }
 }

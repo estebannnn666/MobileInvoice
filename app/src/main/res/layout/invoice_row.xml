@@ -28,74 +28,14 @@
                     android:layout_marginRight="5dp"
                     android:text="Nro factura:"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
                 <TextView
                     android:id="@+id/lblNumberInvoice"
                     android:layout_width="wrap_content"
                     android:textColor="#000000"
                     android:text="24"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:textColor="#000000"
-                    android:textStyle="bold"
-                    android:layout_marginRight="5dp"
-                    android:text="Fecha facturación:"
-                    android:layout_height="wrap_content"
-                    android:textSize="14sp" />
-                <TextView
-                    android:id="@+id/lblDateInvoice"
-                    android:layout_width="wrap_content"
-                    android:textColor="#000000"
-                    android:text="2020-01-01"
-                    android:layout_height="wrap_content"
-                    android:textSize="14sp" />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:textColor="#000000"
-                    android:textStyle="bold"
-                    android:layout_marginRight="5dp"
-                    android:text="Ruc/Documento:"
-                    android:layout_height="wrap_content"
-                    android:textSize="14sp" />
-                <TextView
-                    android:id="@+id/lblRucDoc"
-                    android:layout_width="wrap_content"
-                    android:textColor="#000000"
-                    android:text="10039845556"
-                    android:layout_height="wrap_content"
-                    android:textSize="14sp" />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:textColor="#000000"
-                    android:textStyle="bold"
-                    android:layout_marginRight="5dp"
-                    android:text="Razon social:"
-                    android:layout_height="wrap_content"
-                    android:textSize="14sp" />
-                <TextView
-                    android:id="@+id/lblClientName"
-                    android:layout_width="wrap_content"
-                    android:textColor="#000000"
-                    android:text="Esteban Gudiño"
-                    android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
             </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
@@ -108,7 +48,7 @@
                     android:layout_marginRight="5dp"
                     android:text="Total factura: $"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
                 <TextView
                     android:id="@+id/lblTotalInvoice"
                     android:layout_width="wrap_content"
@@ -116,7 +56,7 @@
                     android:textColor="#000000"
                     android:text="2394.67"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:textColor="#000000"
@@ -124,14 +64,94 @@
                     android:layout_marginRight="5dp"
                     android:text="Pagada:"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
                 <TextView
                     android:id="@+id/lblPayment"
                     android:layout_width="wrap_content"
                     android:textColor="#000000"
                     android:text="SI"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:textColor="#000000"
+                    android:textStyle="bold"
+                    android:layout_marginRight="5dp"
+                    android:text="Fecha facturación:"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/lblDateInvoice"
+                    android:layout_width="wrap_content"
+                    android:textColor="#000000"
+                    android:text="2020-01-01"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:textColor="#000000"
+                    android:textStyle="bold"
+                    android:layout_marginRight="5dp"
+                    android:text="Ruc/Documento:"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/lblRucDoc"
+                    android:layout_width="wrap_content"
+                    android:textColor="#000000"
+                    android:text="10039845556"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:textColor="#000000"
+                    android:textStyle="bold"
+                    android:layout_marginRight="5dp"
+                    android:text="Razon social:"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/lblClientName"
+                    android:layout_width="wrap_content"
+                    android:textColor="#000000"
+                    android:text="Esteban Gudiño"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:textColor="#000000"
+                    android:textStyle="bold"
+                    android:layout_marginRight="5dp"
+                    android:text="Vendedor:"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/lblSeller"
+                    android:layout_width="wrap_content"
+                    android:textColor="#000000"
+                    android:text="Esteban Gudiño"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp" />
             </LinearLayout>
         </LinearLayout>
         <LinearLayout
@@ -156,5 +176,6 @@
                 android:text="Detalle"
                 android:textColor="#000000"/>
         </LinearLayout>
+
     </LinearLayout>
 </LinearLayout>

@@ -56,6 +56,8 @@ public class ListUserActivity extends AppCompatActivity {
                         User us = new User();
                         us.setName(clientNode.child("name").getValue().toString());
                         us.setEmail(clientNode.child("email").getValue().toString());
+                        us.setIdentifier(clientNode.child("identifier").getValue().toString());
+                        us.setAdmin(clientNode.child("admin").getValue().toString());
                         listUsers.add(us);
                     }
                     userAdapter = new UserAdapter(ListUserActivity.this, listUsers);

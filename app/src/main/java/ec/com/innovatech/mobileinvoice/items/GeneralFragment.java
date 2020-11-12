@@ -118,7 +118,7 @@ public class GeneralFragment extends Fragment {
         final String commissionPercentage = txtCommissionPercentage.getText().toString();
 
         if(!barcode.isEmpty() && !itemName.isEmpty() && !cost.isEmpty() && !priceWholesaler.isEmpty() && !priceRetail.isEmpty() && !stock.isEmpty() && !commissionPercentage.isEmpty()){
-            if(barcode.length() <= 10){
+            if(barcode.length() <= 13){
                 Item item = new Item(sequenceItem, barcode, itemName, cost, priceWholesaler, priceRetail, stock, commissionPercentage);
                 editor.putString("barcode", ""+sequenceItem);
                 editor.apply();

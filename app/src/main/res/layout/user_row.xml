@@ -12,8 +12,9 @@
         android:paddingLeft="5dp"
         android:orientation="horizontal">
         <ImageView
-            android:layout_width="40dp"
-            android:layout_height="47dp"
+            android:layout_width="45dp"
+            android:layout_height="52dp"
+            android:paddingTop="5dp"
             android:src="@drawable/user_icon"
             android:id="@+id/imgItem" />
         <LinearLayout
@@ -32,7 +33,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="#000000"
-                    android:textSize="14sp"
+                    android:textSize="12sp"
                     android:text="Usuario:"
                     android:textStyle="bold" />
 
@@ -42,7 +43,29 @@
                     android:textColor="#000000"
                     android:text="Esteban Gudiño"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_marginRight="5dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#000000"
+                    android:textSize="12sp"
+                    android:text="Documento:"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/lblNameIdentifier"
+                    android:layout_width="match_parent"
+                    android:textColor="#000000"
+                    android:text="1002966404"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp" />
 
             </LinearLayout>
             <LinearLayout
@@ -56,14 +79,14 @@
                     android:textStyle="bold"
                     android:layout_marginRight="5dp"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
                 <TextView
                     android:id="@+id/lblUserEmail"
                     android:layout_width="match_parent"
                     android:textColor="#000000"
                     android:text="estebannnn666@hotmail.com"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

@@ -50,8 +50,10 @@ public class UserAdapter extends BaseAdapter implements Filterable {
         }
         User user = getItem(position);
         TextView lblUserName = (TextView) convertView.findViewById(R.id.lblUserName);
+        TextView lblIdentifier = (TextView) convertView.findViewById(R.id.lblNameIdentifier);
         TextView lblUserEmail = (TextView) convertView.findViewById(R.id.lblUserEmail);
         lblUserName.setText(user.getName());
+        lblIdentifier.setText(user.getIdentifier());
         lblUserEmail.setText(user.getEmail());
         return convertView;
     }

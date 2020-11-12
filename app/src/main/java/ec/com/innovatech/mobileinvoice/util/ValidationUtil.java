@@ -54,4 +54,17 @@ public class ValidationUtil {
         }
         return valueComplete.toString().substring(0, numTotal);
     }
+
+    public static String sequenceInvoice(int numTotal, String chain) {
+        StringBuilder chainComplete = new StringBuilder();
+        chainComplete.append("001-");
+        int tamChain = chain.length();
+        int cont = tamChain;
+        while(cont < numTotal) {
+            chainComplete.append("0");
+            cont++;
+        }
+        chainComplete.append(chain);
+        return chainComplete.toString();
+    }
 }

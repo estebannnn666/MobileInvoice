@@ -28,14 +28,14 @@
                     android:layout_marginRight="5dp"
                     android:text="Nro de pedido:"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
                 <TextView
                     android:id="@+id/lblNumberOrder"
                     android:layout_width="wrap_content"
                     android:textColor="#000000"
                     android:text="24"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
             </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
@@ -48,14 +48,14 @@
                     android:layout_marginRight="5dp"
                     android:text="Fecha del pedido:"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
                 <TextView
                     android:id="@+id/lblDateOrder"
                     android:layout_width="wrap_content"
                     android:textColor="#000000"
                     android:text="2020-01-01"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
             </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
@@ -68,54 +68,14 @@
                     android:layout_marginRight="5dp"
                     android:text="Fecha de entrega:"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
                 <TextView
                     android:id="@+id/lblDateDelivery"
                     android:layout_width="wrap_content"
                     android:textColor="#000000"
                     android:text="2020-01-01"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:textColor="#000000"
-                    android:textStyle="bold"
-                    android:layout_marginRight="5dp"
-                    android:text="Cliente:"
-                    android:layout_height="wrap_content"
-                    android:textSize="14sp" />
-                <TextView
-                    android:id="@+id/lblOrderClient"
-                    android:layout_width="wrap_content"
-                    android:textColor="#000000"
-                    android:text="Henry Esteban Gudiño Barahona"
-                    android:layout_height="wrap_content"
-                    android:textSize="14sp" />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:textColor="#000000"
-                    android:textStyle="bold"
-                    android:layout_marginRight="5dp"
-                    android:text="Dirección:"
-                    android:layout_height="wrap_content"
-                    android:textSize="14sp" />
-                <TextView
-                    android:id="@+id/lblOrderAddress"
-                    android:layout_width="wrap_content"
-                    android:textColor="#000000"
-                    android:text="Av. 13 de Abril y Cañar"
-                    android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
             </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
@@ -128,7 +88,7 @@
                     android:layout_marginRight="5dp"
                     android:text="Total pedido: $"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
                 <TextView
                     android:id="@+id/lblTotalOrder"
                     android:layout_width="wrap_content"
@@ -136,7 +96,7 @@
                     android:textColor="#000000"
                     android:text="2394.67"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:textColor="#000000"
@@ -144,14 +104,74 @@
                     android:layout_marginRight="5dp"
                     android:text="Estado:"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
                 <TextView
                     android:id="@+id/lblOrderStatus"
                     android:layout_width="wrap_content"
                     android:textColor="#000000"
                     android:text="Entregada"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:textColor="#000000"
+                    android:textStyle="bold"
+                    android:layout_marginRight="5dp"
+                    android:text="Cliente:"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/lblOrderClient"
+                    android:layout_width="wrap_content"
+                    android:textColor="#000000"
+                    android:text="Henry Esteban Gudiño Barahona"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:textColor="#000000"
+                    android:textStyle="bold"
+                    android:layout_marginRight="5dp"
+                    android:text="Dirección:"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/lblOrderAddress"
+                    android:layout_width="wrap_content"
+                    android:textColor="#000000"
+                    android:text="Av. 13 de Abril y Cañar"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:textColor="#000000"
+                    android:textStyle="bold"
+                    android:layout_marginRight="5dp"
+                    android:text="Vendedor:"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/lblSeller"
+                    android:layout_width="wrap_content"
+                    android:textColor="#000000"
+                    android:text="Esteban Gudiño"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp" />
             </LinearLayout>
         </LinearLayout>
         <LinearLayout

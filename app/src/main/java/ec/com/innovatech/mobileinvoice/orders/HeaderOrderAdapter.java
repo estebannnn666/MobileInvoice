@@ -57,6 +57,7 @@ public class HeaderOrderAdapter extends BaseAdapter implements Filterable {
         TextView lblOrderAddress = (TextView) convertView.findViewById(R.id.lblOrderAddress);
         TextView lblTotalOrder = (TextView) convertView.findViewById(R.id.lblTotalOrder);
         TextView lblOrderStatus = (TextView) convertView.findViewById(R.id.lblOrderStatus);
+        TextView lblSeller = (TextView) convertView.findViewById(R.id.lblSeller);
         int numberOrder = headerOrder.getIdOrder() + 1;
         lblNumberOrder.setText(String.valueOf(numberOrder));
         lblDateOrder.setText(headerOrder.getOrderDate());
@@ -66,6 +67,7 @@ public class HeaderOrderAdapter extends BaseAdapter implements Filterable {
         String priceMaxFormat = ValidationUtil.getTwoDecimal(Double.valueOf(headerOrder.getTotalInvoice()));
         lblTotalOrder.setText(priceMaxFormat);
         lblOrderStatus.setText(headerOrder.getStatusOrder());
+        lblSeller.setText(headerOrder.getSeller());
         return convertView;
     }
 

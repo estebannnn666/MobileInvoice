@@ -19,34 +19,38 @@ public class InvoiceProvider {
     }
 
     public Task<Void> createHeaderInvoice(HeaderInvoice headerInvoice){
-        return mDataBase.child(String.valueOf(headerInvoice.getIdInvoice())).child("Header").setValue(headerInvoice);
+        return mDataBase.child(String.valueOf(headerInvoice.getIdInvoice())).child("header").setValue(headerInvoice);
     }
 
     public Task<Void> createDetailsInvoice(String idInvoice, List<DetailInvoice> detailsInvoice){
-        return mDataBase.child(idInvoice).child("Details").setValue(detailsInvoice);
+        return mDataBase.child(idInvoice).child("details").setValue(detailsInvoice);
     }
 
     public Task<Void> updatePayInvoice(String idInvoice, String valuePay){
-        return mDataBase.child(idInvoice).child("Header").child("paidOut").setValue(valuePay);
+        return mDataBase.child(idInvoice).child("header").child("paidOut").setValue(valuePay);
     }
 
     public DatabaseReference getListInvoices(){
         return mDataBase;
     }
 
-    public Query getListInvoicesOrder(){
-        return mDataBase.orderByChild("Header/dateDocument");
+    public Query getListInvoicesOrder(boolean isAdmin, String seller){
+        if(isAdmin) {
+            return mDataBase.orderByChild("header/dateDocument");
+        }else {
+            return mDataBase.orderByChild("header/userId").equalTo(seller);
+        }
     }
 
     public DatabaseReference getInvoice(String numberDocument){
-        return mDataBase.child(numberDocument).child("Header");
+        return mDataBase.child(numberDocument).child("header");
     }
 
     public DatabaseReference getListDetailsInvoices(String numberDocument){
-        return mDataBase.child(numberDocument).child("Details");
+        return mDataBase.child(numberDocument).child("details");
     }
 
     public DatabaseReference getDetailInvoice(String numberDocument, String id){
-        return mDataBase.child(numberDocument).child("Details").child(id);
+        return mDataBase.child(numberDocument).child("details").child(id);
     }
 }

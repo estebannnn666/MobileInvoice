@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="ec.com.innovatech.mobileinvoice.HomeFragment"
+        android:label="@string/menu_home"
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_nav_home_to_nav_client"
+            app:destination="@id/nav_client" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_items"
+            app:destination="@id/nav_items" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_invoice"
+            app:destination="@id/nav_invoice" />
+    </fragment>
+
+    <activity
+        android:id="@+id/nav_client"
+        android:name="ec.com.innovatech.mobileinvoice.clients.ListClientActivity"
+        android:label="Clients"
+        tools:layout="@layout/activity_list_client">
+    </activity>
+
+    <activity
+        android:id="@+id/nav_items"
+        android:name="ec.com.innovatech.mobileinvoice.items.ListItemActivity"
+        android:label="Productos"
+        tools:layout="@layout/activity_list_item">
+    </activity>
+
+    <activity
+        android:id="@+id/nav_invoice"
+        android:name="ec.com.innovatech.mobileinvoice.invoices.ListInvoiceActivity"
+        android:label="Facturas"
+        tools:layout="@layout/activity_list_invoice">
+    </activity>
+
+    <activity
+        android:id="@+id/nav_orders"
+        android:name="ec.com.innovatech.mobileinvoice.orders.ListOrderActivity"
+        android:label="Pedidos"
+        tools:layout="@layout/activity_list_order">
+    </activity>
+
+    <activity
+        android:id="@+id/nav_account"
+        android:name="ec.com.innovatech.mobileinvoice.charges.ListChargesActivity"
+        android:label="Cuentas por cobrar"
+        tools:layout="@layout/activity_list_charges">
+    </activity>
+
+    <activity
+        android:id="@+id/nav_cash"
+        android:name="ec.com.innovatech.mobileinvoice.cash.TransactionActivity"
+        android:label="Caja"
+        tools:layout="@layout/activity_list_transaction">
+    </activity>
+
+    <activity
+        android:id="@+id/nav_config"
+        android:name="ec.com.innovatech.mobileinvoice.enterprise.EnterpriseActivity"
+        android:label="Configuracion"
+        tools:layout="@layout/activity_enterprise">
+    </activity>
+
+</navigation>

@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.print.PrintManager;
 import android.view.LayoutInflater;
@@ -45,6 +46,7 @@ import ec.com.innovatech.mobileinvoice.util.ValidationUtil;
 
 public class ListOrderActivity extends AppCompatActivity {
 
+    SharedPreferences mPrefUser;
     AlertDialog mDialog;
     ListView listView;
     HeaderOrderAdapter headerOrderAdapter;
@@ -64,6 +66,7 @@ public class ListOrderActivity extends AppCompatActivity {
 
         MyToolBar.show(this,"Pedidos", true);
         mDialog = new SpotsDialog.Builder().setContext(ListOrderActivity.this).setMessage("Espere un momento").build();
+        mPrefUser = getApplicationContext().getSharedPreferences("user_session", MODE_PRIVATE);
         listView = findViewById(R.id.listOrders);
         lblListEmpty =  findViewById(R.id.txtOrderListEmpty);
         lblTotalAccounts = findViewById(R.id.lblTotalOrder);
@@ -86,7 +89,9 @@ public class ListOrderActivity extends AppCompatActivity {
 
     public void loadDataOrders(){
         mDialog.show();
-        orderProvider.getListOrderSorted().addListenerForSingleValueEvent(new ValueEventListener() {
+        String sellerId = mPrefUser.getString("identifier", "");
+        boolean isAdministrator = mPrefUser.getBoolean("isAdmin", false);
+        orderProvider.getListOrderSorted(isAdministrator, sellerId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String totalFormatZero = ValidationUtil.getTwoDecimal(totalValue);
@@ -96,23 +101,24 @@ public class ListOrderActivity extends AppCompatActivity {
                     lblListEmpty.setText("");
                     for (final DataSnapshot invoiceNode: snapshot.getChildren()){
                         HeaderOrder headerOrder = new HeaderOrder();
-                        headerOrder.setIdOrder(Integer.parseInt(invoiceNode.child("Header").child("idOrder").getValue().toString()));
-                        headerOrder.setTotalNotTax(invoiceNode.child("Header").child("totalNotTax").getValue().toString());
-                        headerOrder.setTotalTax(invoiceNode.child("Header").child("totalTax").getValue().toString());
-                        headerOrder.setDiscount(invoiceNode.child("Header").child("discount").getValue().toString());
-                        headerOrder.setTotalIva(invoiceNode.child("Header").child("totalIva").getValue().toString());
-                        headerOrder.setSubTotal(invoiceNode.child("Header").child("subTotal").getValue().toString());
-                        headerOrder.setTotalInvoice(invoiceNode.child("Header").child("totalInvoice").getValue().toString());
-                        headerOrder.setOrderDate(invoiceNode.child("Header").child("orderDate").getValue().toString());
-                        headerOrder.setDeliveryDate(invoiceNode.child("Header").child("deliveryDate").getValue().toString());
-                        headerOrder.setClientPhone(invoiceNode.child("Header").child("clientPhone").getValue().toString());
-                        headerOrder.setClientDirection(invoiceNode.child("Header").child("clientDirection").getValue().toString());
-                        headerOrder.setClientName(invoiceNode.child("Header").child("clientName").getValue().toString());
-                        headerOrder.setClientDocument(invoiceNode.child("Header").child("clientDocument").getValue().toString());
-                        headerOrder.setStatusOrder(invoiceNode.child("Header").child("statusOrder").getValue().toString());
-                        headerOrder.setUserId(invoiceNode.child("Header").child("userId").getValue().toString());
+                        headerOrder.setIdOrder(Integer.parseInt(invoiceNode.child("header").child("idOrder").getValue().toString()));
+                        headerOrder.setTotalNotTax(invoiceNode.child("header").child("totalNotTax").getValue().toString());
+                        headerOrder.setTotalTax(invoiceNode.child("header").child("totalTax").getValue().toString());
+                        headerOrder.setDiscount(invoiceNode.child("header").child("discount").getValue().toString());
+                        headerOrder.setTotalIva(invoiceNode.child("header").child("totalIva").getValue().toString());
+                        headerOrder.setSubTotal(invoiceNode.child("header").child("subTotal").getValue().toString());
+                        headerOrder.setTotalInvoice(invoiceNode.child("header").child("totalInvoice").getValue().toString());
+                        headerOrder.setOrderDate(invoiceNode.child("header").child("orderDate").getValue().toString());
+                        headerOrder.setDeliveryDate(invoiceNode.child("header").child("deliveryDate").getValue().toString());
+                        headerOrder.setClientPhone(invoiceNode.child("header").child("clientPhone").getValue().toString());
+                        headerOrder.setClientDirection(invoiceNode.child("header").child("clientDirection").getValue().toString());
+                        headerOrder.setClientName(invoiceNode.child("header").child("clientName").getValue().toString());
+                        headerOrder.setClientDocument(invoiceNode.child("header").child("clientDocument").getValue().toString());
+                        headerOrder.setStatusOrder(invoiceNode.child("header").child("statusOrder").getValue().toString());
+                        headerOrder.setUserId(invoiceNode.child("header").child("userId").getValue().toString());
+                        headerOrder.setSeller(invoiceNode.child("header").child("seller").getValue().toString());
                         headerOrders.add(headerOrder);
-                        String statusOrder = invoiceNode.child("Header").child("statusOrder").getValue().toString();
+                        String statusOrder = invoiceNode.child("header").child("statusOrder").getValue().toString();
                         if(!statusOrder.equals("CANCELADO")){
                             addTotalInvoiceSaleDay(headerOrder.getOrderDate(), headerOrder.getTotalInvoice());
                         }
@@ -281,10 +287,10 @@ public class ListOrderActivity extends AppCompatActivity {
                 if(snapshot.exists()){
                     listOrderReport = new ArrayList<>();
                     for (final DataSnapshot invoiceNode: snapshot.getChildren()){
-                        String dateOrder = invoiceNode.child("Header").child("orderDate").getValue().toString();
-                        String statusOrder = invoiceNode.child("Header").child("statusOrder").getValue().toString();
+                        String dateOrder = invoiceNode.child("header").child("orderDate").getValue().toString();
+                        String statusOrder = invoiceNode.child("header").child("statusOrder").getValue().toString();
                         if(validateDateSale(dateOrder) && !statusOrder.equals("CANCELADO")){
-                            for (final DataSnapshot detailNode: invoiceNode.child("Details").getChildren()) {
+                            for (final DataSnapshot detailNode: invoiceNode.child("details").getChildren()) {
                                 DetailOrder detailOrder = new DetailOrder();
                                 detailOrder.setIdItem(Integer.parseInt(detailNode.child("idItem").getValue().toString()));
                                 detailOrder.setBarCodeItem(detailNode.child("barCodeItem").getValue().toString());
