@@ -6,6 +6,7 @@ import androidx.appcompat.widget.SearchView;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,6 +31,7 @@ import ec.com.innovatech.mobileinvoice.providers.ClientProvider;
 
 public class ListClientActivity extends AppCompatActivity {
 
+    SharedPreferences mPrefUser;
     AlertDialog mDialog;
     ListView listView;
     ClientAdapter clientAdapter;
@@ -43,6 +45,7 @@ public class ListClientActivity extends AppCompatActivity {
         setContentView(R.layout.activity_list_client);
         MyToolBar.show(this,"Clientes", true);
         mDialog = new SpotsDialog.Builder().setContext(ListClientActivity.this).setMessage("Espere un momento").build();
+        mPrefUser = getApplicationContext().getSharedPreferences("user_session", MODE_PRIVATE);
         listView = findViewById(R.id.listClients);
         lblListEmpty =  findViewById(R.id.txtListEmpty);
         clientProvider = new ClientProvider();
@@ -61,7 +64,9 @@ public class ListClientActivity extends AppCompatActivity {
 
     public void loadDataClient(){
         mDialog.show();
-        clientProvider.getListClientSorted().addListenerForSingleValueEvent(new ValueEventListener() {
+        String sellerId = mPrefUser.getString("identifier", "");
+        boolean isAdministrator = mPrefUser.getBoolean("isAdmin", false);
+        clientProvider.getListClientBySeller(isAdministrator, sellerId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
@@ -73,10 +78,17 @@ public class ListClientActivity extends AppCompatActivity {
                         client.setType(clientNode.child("type").getValue().toString());
                         client.setDocument(clientNode.child("document").getValue().toString());
                         client.setName(clientNode.child("name").getValue().toString());
+                        client.setFirstName(clientNode.child("firstName").getValue() != null ? clientNode.child("firstName").getValue().toString() : null);
+                        client.setSecondName(clientNode.child("secondName").getValue() != null ? clientNode.child("secondName").getValue().toString() : null);
+                        client.setFirstLastName(clientNode.child("firstLastName").getValue() != null ? clientNode.child("firstLastName").getValue().toString() : null);
+                        client.setSecondLastName(clientNode.child("secondLastName").getValue() != null ? clientNode.child("secondLastName").getValue().toString() : null);
                         client.setAddress(clientNode.child("address").getValue().toString());
                         client.setCity(clientNode.child("city").getValue().toString());
                         client.setTelephone(clientNode.child("telephone").getValue().toString());
-                        client.setEmail(clientNode.child("email").getValue().toString());
+                        client.setEmail(clientNode.child("email").getValue() != null ? clientNode.child("email").getValue().toString() : null);
+                        client.setZoneTypeCode(clientNode.child("zoneTypeCode").getValue() != null ? Integer.parseInt(clientNode.child("zoneTypeCode").getValue().toString()) : null);
+                        client.setZoneValueCode(clientNode.child("zoneValueCode").getValue() != null ? clientNode.child("zoneValueCode").getValue().toString() : null);
+                        client.setUserId(clientNode.child("userId").getValue() != null ? clientNode.child("userId").getValue().toString() : null);
                         listClients.add(client);
                     }
                     clientAdapter = new ClientAdapter(ListClientActivity.this, getBaseContext(), listClients);

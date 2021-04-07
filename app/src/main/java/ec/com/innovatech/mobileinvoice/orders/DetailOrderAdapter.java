@@ -51,8 +51,8 @@ public class DetailOrderAdapter extends BaseAdapter{
         TextView unitValue = (TextView) convertView.findViewById(R.id.lblUnitValue);
         TextView subTotal = (TextView) convertView.findViewById(R.id.lblSubTotal);
         TextView detailTax = (TextView)convertView.findViewById(R.id.lblDetailTax);
-        String unitValueFormat = ValidationUtil.getTwoDecimal(Double.valueOf(detailOrder.getUnitValue()));
-        String subTotalFormat = ValidationUtil.getTwoDecimal(Double.valueOf(detailOrder.getSubTotal()));
+        String unitValueFormat = ValidationUtil.getTwoDecimal(ValidationUtil.getValueDouble(detailOrder.getUnitValue()));
+        String subTotalFormat = ValidationUtil.getTwoDecimal(ValidationUtil.getValueDouble(detailOrder.getSubTotal()));
         quantity.setText(detailOrder.getQuantity());
         descriptionItem.setText(detailOrder.getDescription());
         unitValue.setText(unitValueFormat);

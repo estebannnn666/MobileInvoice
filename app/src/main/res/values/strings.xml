@@ -7,18 +7,24 @@
 
     <string name="client_type">Tipo cliente</string>
     <string name="client_document">Documento / Ruc</string>
-    <string name="client_name">Nombre / Razón social</string>
+    <string name="client_name">Razón social</string>
+    <string name="client_first_name">Primer nombre</string>
+    <string name="client_first_last_name">Primer Apellido</string>
+    <string name="client_second_name">Segundo nombre</string>
+    <string name="client_second_last_name">Segundo apellido</string>
     <string name="client_address">Dirección</string>
     <string name="client_country">País</string>
     <string name="client_city">Ciudad</string>
     <string name="client_telephone">Teléfono</string>
+    <string name="client_zone">Zona - sector</string>
 
     <string name="bar_code">Código de barras</string>
     <string name="item_name">Nombre del artículo</string>
     <string name="cost">Costo</string>
     <string name="price_wholesaler">Precio venta mayorista</string>
     <string name="price_retail">Precio venta minirista</string>
-    <string name="commission_percentage">Porcentaje de comisión</string>
+    <string name="commission_percentage">Porcentaje comisión al por menor</string>
+    <string name="commission_percentage_wholesale">Procentaje comisión al por mayor</string>
     <string name="stock">Stock existente</string>
 
     <string name="name_tax">Nombre de impuesto</string>

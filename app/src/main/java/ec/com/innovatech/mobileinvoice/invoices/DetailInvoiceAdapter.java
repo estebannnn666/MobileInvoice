@@ -51,8 +51,10 @@ public class DetailInvoiceAdapter extends BaseAdapter{
         TextView unitValue = (TextView) convertView.findViewById(R.id.lblUnitValue);
         TextView subTotal = (TextView) convertView.findViewById(R.id.lblSubTotal);
         TextView detailTax = (TextView)convertView.findViewById(R.id.lblDetailTax);
-        String unitValueFormat = ValidationUtil.getTwoDecimal(Double.valueOf(detailInvoice.getUnitValue()));
-        String subTotalFormat = ValidationUtil.getTwoDecimal(Double.valueOf(detailInvoice.getSubTotal()));
+        double unitValueDouble = ValidationUtil.getValueDouble(detailInvoice.getUnitValue());
+        double subTotalDouble = ValidationUtil.getValueDouble(detailInvoice.getSubTotal());
+        String unitValueFormat = ValidationUtil.getTwoDecimal(unitValueDouble);
+        String subTotalFormat = ValidationUtil.getTwoDecimalInvoice(subTotalDouble);
         quantity.setText(detailInvoice.getQuantity());
         descriptionItem.setText(detailInvoice.getDescription());
         unitValue.setText(unitValueFormat);

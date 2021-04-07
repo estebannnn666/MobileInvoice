@@ -7,26 +7,39 @@ public class Client  implements Serializable {
     private String buyType;
     private String type;
     private String document;
+    private String firstName;
+    private String secondName;
+    private String firstLastName;
+    private String secondLastName;
     private String name;
     private String address;
     private String city;
     private String telephone;
     private String email;
-
+    private String zoneValueCode;
+    private Integer zoneTypeCode;
+    private String userId;
 
     public Client(){
     }
 
-    public Client(Integer id, String buyType, String type, String document, String name, String address, String city, String telephone, String email){
+    public Client(Integer id, String buyType, String type, String document, String name, String firstName, String secondName, String firstLastName, String secondLastName, String address, String city, String telephone, String email, String zoneValueCode, Integer zoneTypeCode, String userId){
         this.id = id;
         this.buyType = buyType;
         this.type = type;
         this.document = document;
         this.name = name;
+        this.firstName = firstName;
+        this.secondName = secondName;
+        this.firstLastName = firstLastName;
+        this.secondLastName = secondLastName;
         this.address = address;
         this.city = city;
         this.telephone = telephone;
         this.email = email;
+        this.zoneValueCode = zoneValueCode;
+        this.zoneTypeCode = zoneTypeCode;
+        this.userId = userId;
     }
 
     public Integer getId() {
@@ -69,6 +82,38 @@ public class Client  implements Serializable {
         this.name = name;
     }
 
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getSecondName() {
+        return secondName;
+    }
+
+    public void setSecondName(String secondName) {
+        this.secondName = secondName;
+    }
+
+    public String getFirstLastName() {
+        return firstLastName;
+    }
+
+    public void setFirstLastName(String firstLastName) {
+        this.firstLastName = firstLastName;
+    }
+
+    public String getSecondLastName() {
+        return secondLastName;
+    }
+
+    public void setSecondLastName(String secondLastName) {
+        this.secondLastName = secondLastName;
+    }
+
     public String getAddress() {
         return address;
     }
@@ -96,8 +141,30 @@ public class Client  implements Serializable {
     public String getEmail() {
         return email;
     }
-
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getZoneValueCode() {
+        return zoneValueCode;
+    }
+    public void setZoneValueCode(String zoneValueCode) {
+        this.zoneValueCode = zoneValueCode;
+    }
+
+    public Integer getZoneTypeCode() {
+        return zoneTypeCode;
+    }
+
+    public void setZoneTypeCode(Integer zoneTypeCode) {
+        this.zoneTypeCode = zoneTypeCode;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 }

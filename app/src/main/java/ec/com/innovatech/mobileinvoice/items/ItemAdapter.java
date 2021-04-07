@@ -1,12 +1,16 @@
 package ec.com.innovatech.mobileinvoice.items;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Filter;
 import android.widget.Filterable;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -52,13 +56,21 @@ public class ItemAdapter extends BaseAdapter implements Filterable {
             convertView = layoutInflater.inflate(R.layout.item_row, null);
         }
         Item item = getItem(position);
+        /*ImageView imageItem = (ImageView) convertView.findViewById(R.id.imgItem);
+        if(item.getImage() != null && item.getImage().trim() != "") {
+            byte[] decodedString = Base64.decode(item.getImage(), Base64.DEFAULT);
+            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+            imageItem.setImageBitmap(decodedByte);
+        }*/
         TextView lblBarCode = (TextView) convertView.findViewById(R.id.lblBarCode);
         TextView lblNameItem = (TextView) convertView.findViewById(R.id.lblNameItem);
         TextView lblPriceMin = (TextView) convertView.findViewById(R.id.lblPriceMin);
         TextView lblPriceMax = (TextView) convertView.findViewById(R.id.lblPriceMax);
         TextView lblStock = (TextView) convertView.findViewById(R.id.lblStock);
-        String priceMinFormat = ValidationUtil.getTwoDecimal(Double.valueOf(item.getPriceRetail()));
-        String priceMaxFormat = ValidationUtil.getTwoDecimal(Double.valueOf(item.getPriceWholesaler()));
+        double priceMin = ValidationUtil.getValueDouble(item.getPriceRetail());
+        double priceMax = ValidationUtil.getValueDouble(item.getPriceWholesaler());
+        String priceMinFormat = ValidationUtil.getTwoDecimal(priceMin);
+        String priceMaxFormat = ValidationUtil.getTwoDecimal(priceMax);
         lblBarCode.setText(item.getBarCode());
         lblNameItem.setText(item.getNameItem());
         lblPriceMin.setText(priceMinFormat);

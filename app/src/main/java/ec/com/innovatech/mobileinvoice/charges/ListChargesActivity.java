@@ -75,12 +75,12 @@ public class ListChargesActivity extends AppCompatActivity {
         transactionProvider = new TransactionProvider();
         loadInvoicesNotPaid();
         totalValue = 0;
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        /*listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 openDialogPay(headerInvoices.get(position));
             }
-        });
+        });*/
 
 
     }
@@ -114,7 +114,7 @@ public class ListChargesActivity extends AppCompatActivity {
                         Transaction transaction = new Transaction();
                         transaction.setUserId(mPrefUser.getString("identifier", ""));
                         transaction.setType("Ingreso");
-                        transaction.setValueTransaction(Double.parseDouble(headerInvoice.getTotalInvoice()));
+                        transaction.setValueTransaction(ValidationUtil.getValueDouble(headerInvoice.getTotalInvoice()));
                         transaction.setDescription("Ingreso por cobro factura Nro:" + headerInvoice.getNumberDocument());
                         transaction.setDateTransaction(currentDate);
                         createTransaction(transaction);
@@ -169,7 +169,7 @@ public class ListChargesActivity extends AppCompatActivity {
                             headerInvoice.setUserId(invoiceNode.child("header").child("userId").getValue() != null ? invoiceNode.child("header").child("userId").getValue().toString() : null);
                             headerInvoice.setSeller(invoiceNode.child("header").child("seller").getValue() != null ? invoiceNode.child("header").child("seller").getValue().toString() : null);
                             headerInvoices.add(headerInvoice);
-                            totalValue = totalValue + Double.parseDouble(headerInvoice.getTotalInvoice());
+                            totalValue = totalValue + ValidationUtil.getValueDouble(headerInvoice.getTotalInvoice());
                             totalDocuments++;
                         }
                     }

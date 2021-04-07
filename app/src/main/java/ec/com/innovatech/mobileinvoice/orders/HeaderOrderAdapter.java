@@ -64,7 +64,7 @@ public class HeaderOrderAdapter extends BaseAdapter implements Filterable {
         lblDateDelivery.setText(headerOrder.getDeliveryDate());
         lblOrderClient.setText(headerOrder.getClientName());
         lblOrderAddress.setText(headerOrder.getClientDirection());
-        String priceMaxFormat = ValidationUtil.getTwoDecimal(Double.valueOf(headerOrder.getTotalInvoice()));
+        String priceMaxFormat = ValidationUtil.getTwoDecimal(ValidationUtil.getValueDouble(headerOrder.getTotalInvoice()));
         lblTotalOrder.setText(priceMaxFormat);
         lblOrderStatus.setText(headerOrder.getStatusOrder());
         lblSeller.setText(headerOrder.getSeller());

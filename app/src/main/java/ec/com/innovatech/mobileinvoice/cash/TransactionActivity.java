@@ -29,6 +29,7 @@ import ec.com.innovatech.mobileinvoice.includes.MyToolBar;
 import ec.com.innovatech.mobileinvoice.models.Transaction;
 import ec.com.innovatech.mobileinvoice.providers.SequenceProvider;
 import ec.com.innovatech.mobileinvoice.providers.TransactionProvider;
+import ec.com.innovatech.mobileinvoice.util.ValidationUtil;
 
 public class TransactionActivity extends AppCompatActivity {
     SharedPreferences mPrefUser;
@@ -84,7 +85,7 @@ public class TransactionActivity extends AppCompatActivity {
             Transaction transaction = new Transaction();
             transaction.setUserId(mPrefUser.getString("identifier", ""));
             transaction.setType(type);
-            transaction.setValueTransaction(Double.parseDouble(value));
+            transaction.setValueTransaction(ValidationUtil.getValueDouble(value));
             transaction.setDescription(description);
             transaction.setDateTransaction(currentDate);
             create(transaction);

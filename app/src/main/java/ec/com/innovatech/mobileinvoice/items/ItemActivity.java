@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-
 import com.google.android.material.tabs.TabItem;
 import com.google.android.material.tabs.TabLayout;
 
@@ -21,7 +20,7 @@ public class ItemActivity extends AppCompatActivity{
 
     private AuthProviders mAuthProvider;
     TabLayout tabLayout;
-    TabItem tabItem, tabImp, tabUnit;
+    TabItem tabItem, tabImp, tabUnit, tabImage;
     ViewPager viewPager;
     PageAdapter pageAdapter;
 
@@ -35,6 +34,7 @@ public class ItemActivity extends AppCompatActivity{
         tabItem = findViewById(R.id.tabGeneral);
         tabImp = findViewById(R.id.tabImps);
         tabUnit = findViewById(R.id.tabUnit);
+        tabImage = findViewById(R.id.tabImg);
         viewPager = findViewById(R.id.viewPage);
         pageAdapter = new PageAdapter(getSupportFragmentManager(),tabLayout.getTabCount());
         viewPager.setAdapter(pageAdapter);
@@ -48,6 +48,8 @@ public class ItemActivity extends AppCompatActivity{
                 }else if(tab.getPosition() == 1){
                     pageAdapter.notifyDataSetChanged();
                 }else if(tab.getPosition() == 2){
+                    pageAdapter.notifyDataSetChanged();
+                }else if(tab.getPosition() == 3){
                     pageAdapter.notifyDataSetChanged();
                 }
             }

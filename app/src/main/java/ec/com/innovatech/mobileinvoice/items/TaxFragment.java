@@ -64,20 +64,20 @@ public class TaxFragment extends Fragment {
         listTaxView = root.findViewById(R.id.listTax);
         btnSavetaxes = root.findViewById(R.id.btnSaveTax);
         btnOpenDialog = root.findViewById(R.id.btnOpenTax);
-        mDialog = new SpotsDialog.Builder().setContext(getActivity()).setMessage("Espere un momento").build();
+        mDialog = new SpotsDialog.Builder().setContext(getContext()).setMessage("Espere un momento").build();
         taxProvider = new TaxProvider();
         listTaxes = new ArrayList<>();
 
-        String barcode = mPref.getString("barcode", "");
-        if(!barcode.isEmpty()) {
-            loadDataTax(barcode);
+        String idItem = mPref.getString("idItem", "");
+        if(!idItem.isEmpty()) {
+            loadDataTax(idItem);
         }
 
         btnOpenDialog.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String idTax = mPref.getString("barcode", "");
-                if(!idTax.isEmpty()) {
+                String idItem = mPref.getString("idItem", "");
+                if(!idItem.isEmpty()) {
                     viewDialogTax();
                 }else{
                     MyToastMessage.warn((AppCompatActivity) getActivity(), "Primero debe guardar datos del artículo");
@@ -93,8 +93,8 @@ public class TaxFragment extends Fragment {
                     for (Tax tax : listTaxes) {
                         mDialog.show();
                         tax.setId(""+cont);
-                        String barCode = mPref.getString("barcode", "");
-                        create(barCode, tax);
+                        String idItem = mPref.getString("idItem", "");
+                        create(idItem, tax);
                         cont++;
                     }
                 }else{
@@ -106,10 +106,10 @@ public class TaxFragment extends Fragment {
         listTaxView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String barcodeTax = mPref.getString("barcode", "");
+                String idItem = mPref.getString("idItem", "");
                 Tax taxDelete = listTaxes.get(position);
                 if(taxDelete.getId() != null) {
-                    delete(barcodeTax, taxDelete);
+                    delete(idItem, taxDelete);
                 }else {
                     MyToastMessage.susses((AppCompatActivity) getActivity(), "Los datos se eliminarion correctamente");
                 }
@@ -125,8 +125,8 @@ public class TaxFragment extends Fragment {
         String nameTax = txtNameTax.getText().toString();
         String descriptionTax = txtDescriptionTax.getText().toString();
         String valueTax = txtValueTax.getText().toString();
-        String idTax = mPref.getString("barcode", "");
-        if(!idTax.isEmpty()) {
+        String idItem = mPref.getString("idItem", "");
+        if(!idItem.isEmpty()) {
             if (!nameTax.isEmpty() && !descriptionTax.isEmpty() && !valueTax.isEmpty()) {
                 Tax tax = new Tax(null, nameTax, descriptionTax, valueTax);
                 listTaxes.add(tax);

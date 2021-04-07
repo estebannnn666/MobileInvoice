@@ -31,7 +31,19 @@ public class ClientProvider {
         return mDataBase.orderByChild("name");
     }
 
+    public Query getListClientBySeller(boolean isAdmin, String seller){
+        if(isAdmin) {
+            return mDataBase.orderByChild("name");
+        }else {
+            return mDataBase.orderByChild("userId").equalTo(seller);
+        }
+    }
+
     public DatabaseReference getClient(String id){
         return mDataBase.child(id);
+    }
+
+    public Query getClientByNumberDocument(String numberDocument){
+        return mDataBase.orderByChild("document").equalTo(numberDocument);
     }
 }

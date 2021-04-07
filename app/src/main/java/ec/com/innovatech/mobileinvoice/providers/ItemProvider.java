@@ -6,6 +6,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 
 import ec.com.innovatech.mobileinvoice.models.Client;
+import ec.com.innovatech.mobileinvoice.models.ImageItem;
 import ec.com.innovatech.mobileinvoice.models.Item;
 
 public class ItemProvider {
@@ -39,5 +40,13 @@ public class ItemProvider {
 
     public DatabaseReference getItem(String id){
         return mDataBase.child(id).child("dataItem");
+    }
+
+    public Task<Void> createAndUpdateImage(String itemId, ImageItem imageItem){
+        return FirebaseDatabase.getInstance().getReference().child("Images").child(itemId).setValue(imageItem);
+    }
+
+    public DatabaseReference getDataImage(String idItem){
+        return FirebaseDatabase.getInstance().getReference().child("Images").child(idItem).child("image");
     }
 }

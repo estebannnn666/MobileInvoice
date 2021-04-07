@@ -49,7 +49,7 @@ public class TaxAdapter extends BaseAdapter{
         TextView lblNameTax = (TextView) convertView.findViewById(R.id.lblNameTax);
         TextView lblDescriptionTax = (TextView) convertView.findViewById(R.id.lblDescriptionTax);
         TextView lblValueTax = (TextView) convertView.findViewById(R.id.lblValueTax);
-        String valueTaxFormat = ValidationUtil.getTwoDecimal(Double.valueOf(tax.getValueTax()));
+        String valueTaxFormat = ValidationUtil.getTwoDecimal(ValidationUtil.getValueDouble(tax.getValueTax()));
         lblNameTax.setText(tax.getNameTax());
         lblDescriptionTax.setText(tax.getDescriptionTax());
         lblValueTax.setText(valueTaxFormat);

@@ -22,9 +22,9 @@ public class HeaderInvoiceAdapter extends BaseAdapter implements Filterable {
     private ArrayList<HeaderInvoice> headerInvoices;
     private ArrayList<HeaderInvoice> origin;
 
-    public HeaderInvoiceAdapter(Context context, ArrayList<HeaderInvoice> listDriveUnit) {
+    public HeaderInvoiceAdapter(Context context, ArrayList<HeaderInvoice> headerInvoices) {
         this.context = context;
-        this.headerInvoices = listDriveUnit;
+        this.headerInvoices = headerInvoices;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class HeaderInvoiceAdapter extends BaseAdapter implements Filterable {
         lblDateInvoice.setText(headerInvoice.getDateDocument());
         lblRucDoc.setText(headerInvoice.getClientDocument());
         lblClientName.setText(headerInvoice.getClientName());
-        String priceMaxFormat = ValidationUtil.getTwoDecimal(Double.valueOf(headerInvoice.getTotalInvoice()));
+        String priceMaxFormat = ValidationUtil.getTwoDecimal(ValidationUtil.getValueDouble(headerInvoice.getTotalInvoice()));
         lblTotalInvoice.setText(priceMaxFormat);
         lblPayment.setText(headerInvoice.getPaidOut().equals("true") ? "SI" : "NO");
         lblSeller.setText(headerInvoice.getSeller());
@@ -97,5 +97,9 @@ public class HeaderInvoiceAdapter extends BaseAdapter implements Filterable {
                 notifyDataSetChanged();
             }
         };
+    }
+
+    public ArrayList<HeaderInvoice> getHeaderInvoices() {
+        return headerInvoices;
     }
 }

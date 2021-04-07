@@ -66,18 +66,17 @@ public class DriveUnitFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View root = inflater.inflate(R.layout.fragment_drive_unit, container, false);
-
+        mDialog = new SpotsDialog.Builder().setContext(getContext()).setMessage("Espere un momento").build();
         mPref = getContext().getSharedPreferences("typeUser", Context.MODE_PRIVATE);
         listDriveUnitView = root.findViewById(R.id.listDriveUnit);
         btnSaveDriverUnit = root.findViewById(R.id.btnSaveDriveUnit);
         btnOpenDriverUnitDialog = root.findViewById(R.id.btnOpenDriveUnit);
-        mDialog = new SpotsDialog.Builder().setContext(getActivity()).setMessage("Espere un momento").build();
         driverUnitProvider = new DriverUnitProvider();
         listDriverUnit = new ArrayList<>();
         driverUnitCatalogValue = "";
         driverUnitCatalogName = "";
 
-        String barcode = mPref.getString("barcode", "");
+        String barcode = mPref.getString("idItem", "");
         if(!barcode.isEmpty()) {
             loadDataDriverUnit(barcode);
         }
@@ -85,7 +84,7 @@ public class DriveUnitFragment extends Fragment {
         btnOpenDriverUnitDialog.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String idTax = mPref.getString("barcode", "");
+                String idTax = mPref.getString("idItem", "");
                 if(!idTax.isEmpty()) {
                     viewDialogDriverUnit();
                 }else{
@@ -102,8 +101,8 @@ public class DriveUnitFragment extends Fragment {
                     for (DriveUnit driveUnit : listDriverUnit) {
                         mDialog.show();
                         driveUnit.setId(""+cont);
-                        String barCode = mPref.getString("barcode", "");
-                        create(barCode, driveUnit);
+                        String idItem = mPref.getString("idItem", "");
+                        create(idItem, driveUnit);
                         cont++;
                     }
                 }else{
@@ -115,10 +114,10 @@ public class DriveUnitFragment extends Fragment {
         listDriveUnitView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String barcodeTax = mPref.getString("barcode", "");
+                String idItem = mPref.getString("idItem", "");
                 DriveUnit driveUnit = listDriverUnit.get(position);
                 if(driveUnit.getId() != null) {
-                    delete(barcodeTax, driveUnit);
+                    delete(idItem, driveUnit);
                 }else {
                     MyToastMessage.susses((AppCompatActivity) getActivity(), "Los datos se eliminarion correctamente");
                 }
@@ -136,9 +135,9 @@ public class DriveUnitFragment extends Fragment {
         if(chkDefault.isChecked()){
             isDefault = "true";
         }
-        String idTax = mPref.getString("barcode", "");
+        String idItem = mPref.getString("idItem", "");
         boolean validation = true;
-        if(!idTax.isEmpty()) {
+        if(!idItem.isEmpty()) {
             if (!driverUnitValue.isEmpty() && !driverUnitCatalogValue.isEmpty()) {
                 for (DriveUnit driver : listDriverUnit){
                     if(driver.getIsDefault().equals("true") && isDefault.equals("true")){
@@ -184,8 +183,8 @@ public class DriveUnitFragment extends Fragment {
         });
     }
 
-    private void delete(String barCode, DriveUnit driveUnit) {
-        driverUnitProvider.removeDriveUnit(barCode, driveUnit).addOnCompleteListener(new OnCompleteListener<Void>() {
+    private void delete(String idItem, DriveUnit driveUnit) {
+        driverUnitProvider.removeDriveUnit(idItem, driveUnit).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {

@@ -23,6 +23,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.google.android.gms.common.util.CollectionUtils;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
@@ -31,6 +32,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -80,7 +83,7 @@ public class ListInvoiceActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent intent = new Intent(ListInvoiceActivity.this, InvoiceActivity.class);
-                intent.putExtra("INVOICE_SELECT", headerInvoices.get(position));
+                intent.putExtra("INVOICE_SELECT", headerInvoiceAdapter.getHeaderInvoices().get(position));
                 startActivity(intent);
             }
         });
@@ -121,7 +124,12 @@ public class ListInvoiceActivity extends AppCompatActivity {
                     String totalFormat = ValidationUtil.getTwoDecimal(totalValue);
                     lblTotalAccounts.setText(totalFormat);
                     lblNumberDocuments.setText(""+totalDocuments);
-                    headerInvoiceAdapter = new HeaderInvoiceAdapter(getBaseContext(), headerInvoices);
+                    Collections.sort(headerInvoices, new CompareInvoice());
+                    ArrayList<HeaderInvoice> listDescending = new ArrayList<>();
+                    for(int i = headerInvoices.size()-1; i >= 0; i--){
+                        listDescending.add(headerInvoices.get(i));
+                    }
+                    headerInvoiceAdapter = new HeaderInvoiceAdapter(getBaseContext(), listDescending);
                     listView.setAdapter(headerInvoiceAdapter);
                     mDialog.dismiss();
                 }else{
@@ -158,7 +166,7 @@ public class ListInvoiceActivity extends AppCompatActivity {
             dataEnd.set(Calendar.SECOND, 59);
             dataEnd.set(Calendar.MILLISECOND, 59);
             if(dateInvoiceCalendar.compareTo(dataBegin) >= 0 && dateInvoiceCalendar.compareTo(dataEnd) <= 0) {
-                totalValue = totalValue + Double.parseDouble(totalInvoice);
+                totalValue = totalValue + ValidationUtil.getValueDouble(totalInvoice);
                 totalDocuments++;
                 String totalFormat = ValidationUtil.getTwoDecimal(totalValue);
                 lblTotalAccounts.setText(totalFormat);
@@ -364,8 +372,8 @@ public class ListInvoiceActivity extends AppCompatActivity {
                 int quantityNew = Integer.parseInt(detailInvoice.getQuantity());
                 quantityItem = quantityItem + quantityNew;
                 detail.setQuantity(""+quantityItem);
-                double subTotalItem = Double.parseDouble(detail.getSubTotal());
-                double subTotalNew = Double.parseDouble(detailInvoice.getSubTotal());
+                double subTotalItem = ValidationUtil.getValueDouble(detail.getSubTotal());
+                double subTotalNew = ValidationUtil.getValueDouble(detailInvoice.getSubTotal());
                 subTotalItem = subTotalItem + subTotalNew;
                 detail.setSubTotal(""+subTotalItem);
                 break;

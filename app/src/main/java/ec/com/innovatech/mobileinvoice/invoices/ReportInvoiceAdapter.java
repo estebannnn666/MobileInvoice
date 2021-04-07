@@ -131,9 +131,9 @@ public class ReportInvoiceAdapter extends PrintDocumentAdapter {
         if(!CollectionUtils.isEmpty(detailsInvoice)) {
             for (DetailInvoice det : detailsInvoice) {
                 titleBaseLine = titleBaseLine + 25;
-                String unitFormat = ValidationUtil.getTwoDecimal(Double.valueOf(det.getUnitValue()));
-                String totalFormat = ValidationUtil.getTwoDecimal(Double.valueOf(det.getSubTotal()));
-                totalSales = totalSales + Double.valueOf(det.getSubTotal());
+                String unitFormat = ValidationUtil.getTwoDecimal(ValidationUtil.getValueDouble(det.getUnitValue()));
+                String totalFormat = ValidationUtil.getTwoDecimal(ValidationUtil.getValueDouble(det.getSubTotal()));
+                totalSales = totalSales + ValidationUtil.getValueDouble(det.getSubTotal());
                 canvas.drawText(ValidationUtil.completeSpaceString(25, det.getDescription()), leftMargin, titleBaseLine, paint);
                 canvas.drawText(ValidationUtil.completeSpaceString(10, det.getValueCatalogDriverUnit()+"x"+det.getValueDriverUnit()), 280, titleBaseLine, paint);
                 canvas.drawText(ValidationUtil.completeSpaceString(12, det.getQuantity()), 370, titleBaseLine, paint);

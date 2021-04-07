@@ -72,7 +72,7 @@ public class ListTransactionActivity extends AppCompatActivity {
                         transaction.setId(Integer.parseInt(transactionNode.child("id").getValue().toString()));
                         transaction.setType(transactionNode.child("type").getValue().toString());
                         transaction.setDateTransaction(transactionNode.child("dateTransaction").getValue().toString());
-                        transaction.setValueTransaction(Double.parseDouble(transactionNode.child("valueTransaction").getValue().toString()));
+                        transaction.setValueTransaction(ValidationUtil.getValueDouble(transactionNode.child("valueTransaction").getValue().toString()));
                         transaction.setDescription(transactionNode.child("description").getValue().toString());
                         transaction.setUserId(transactionNode.child("userId").getValue().toString());
                         transactions.add(transaction);

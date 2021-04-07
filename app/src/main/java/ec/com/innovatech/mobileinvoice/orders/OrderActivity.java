@@ -362,9 +362,9 @@ public class OrderActivity extends AppCompatActivity {
         txtSubTotal = view.findViewById(R.id.txtSubTotal);
         btnAddDetail = view.findViewById(R.id.btnAddDetail);
         // Load data item selected
-        String priceWholesalerFormat = ValidationUtil.getTwoDecimal(Double.valueOf(item.getPriceWholesaler()));
-        String priceRetailFormat = ValidationUtil.getTwoDecimal(Double.valueOf(item.getPriceRetail()));
-        String costFormat = ValidationUtil.getTwoDecimal(Double.valueOf(item.getCost()));
+        String priceWholesalerFormat = ValidationUtil.getTwoDecimal(ValidationUtil.getValueDouble(item.getPriceWholesaler()));
+        String priceRetailFormat = ValidationUtil.getTwoDecimal(ValidationUtil.getValueDouble(item.getPriceRetail()));
+        String costFormat = ValidationUtil.getTwoDecimal(ValidationUtil.getValueDouble(item.getCost()));
         lblBarCode.setText(item.getBarCode());
         lblNameItem.setText(item.getNameItem());
         lblPriceMay.setText(priceWholesalerFormat);
@@ -610,7 +610,7 @@ public class OrderActivity extends AppCompatActivity {
         int quantityDriverUnit = quantity * Integer.parseInt(driveUnitSelect.getUnitDriveValue());
         double price = 0.0;
         if(!priceUnit.isEmpty()) {
-            price = Double.parseDouble(priceUnit);
+            price = ValidationUtil.getValueDouble(priceUnit);
         }
         double subTotalInvoice = quantityDriverUnit * price;
         txtSubTotal.setText(ValidationUtil.getTwoDecimal(subTotalInvoice));
@@ -623,9 +623,9 @@ public class OrderActivity extends AppCompatActivity {
         double valueUnit;
         double discount = 0;
         if(clientSearch.getBuyType().equals("Minorista")){
-            valueUnit = Double.parseDouble(item.getPriceRetail());
+            valueUnit = ValidationUtil.getValueDouble(item.getPriceRetail());
         }else{
-            valueUnit = Double.parseDouble(item.getPriceWholesaler());
+            valueUnit = ValidationUtil.getValueDouble(item.getPriceWholesaler());
         }
 
         if (!quantity.isEmpty() && !priceUnit.isEmpty() && !subTotal.isEmpty() && driveUnitSelect != null && driveUnitSelect.getUnitDriveValue() != null) {
@@ -633,8 +633,8 @@ public class OrderActivity extends AppCompatActivity {
             int driverUnit = Integer.parseInt(driveUnitSelect.getUnitDriveValue());
             int totalUnits = quantityNumber * driverUnit;
             int stockExists = Integer.parseInt(item.getStock());
-            if(Double.parseDouble(priceUnit) < valueUnit ){
-                discount = (valueUnit - Double.parseDouble(priceUnit)) * quantityNumber * driverUnit;
+            if(ValidationUtil.getValueDouble(priceUnit) < valueUnit ){
+                discount = (valueUnit - ValidationUtil.getValueDouble(priceUnit)) * quantityNumber * driverUnit;
             }
             if(totalUnits > stockExists){
                 MyToastMessage.error(OrderActivity.this, "No existe stock suficiente para el artículo");
@@ -665,18 +665,18 @@ public class OrderActivity extends AppCompatActivity {
                 detailOrderAdapter = new DetailOrderAdapter(getApplicationContext(), listDetailOrders);
                 listDetailOrderView.setAdapter(detailOrderAdapter);
 
-                double subTotalItem = Double.parseDouble(subTotal);
-                double subTotalFac = Double.parseDouble(lblSubTotalFac.getText().toString());
-                double discountFac = Double.parseDouble(lblDiscountFac.getText().toString());
-                double totalSinIva = Double.parseDouble(lblTotalNotTaxFac.getText().toString());
-                double totalConIva = Double.parseDouble(lblTotalTaxFac.getText().toString());
-                double totalIva = Double.parseDouble(lblTaxFac.getText().toString());
-                double totalFac = Double.parseDouble(lblTotalFac.getText().toString());
+                double subTotalItem = ValidationUtil.getValueDouble(subTotal);
+                double subTotalFac = ValidationUtil.getValueDouble(lblSubTotalFac.getText().toString());
+                double discountFac = ValidationUtil.getValueDouble(lblDiscountFac.getText().toString());
+                double totalSinIva = ValidationUtil.getValueDouble(lblTotalNotTaxFac.getText().toString());
+                double totalConIva = ValidationUtil.getValueDouble(lblTotalTaxFac.getText().toString());
+                double totalIva = ValidationUtil.getValueDouble(lblTaxFac.getText().toString());
+                double totalFac = ValidationUtil.getValueDouble(lblTotalFac.getText().toString());
                 double ivaItem = 0;
                 subTotalFac = subTotalFac + subTotalItem;
                 if(snapshot.exists()){
                     totalConIva = totalConIva + subTotalItem;
-                    ivaItem = subTotalItem * Double.parseDouble(snapshot.child("valueTax").getValue().toString()) / 100;
+                    ivaItem = subTotalItem * ValidationUtil.getValueDouble(snapshot.child("valueTax").getValue().toString()) / 100;
                     totalIva = totalIva + ivaItem;
                 }else{
                     totalSinIva = totalSinIva + subTotalItem;
@@ -1022,8 +1022,8 @@ public class OrderActivity extends AppCompatActivity {
         double totalFac = 0;
         double ivaItem;
         for (DetailOrder detailInvoice: listDetailOrders){
-            double subTotalItem = Double.parseDouble(detailInvoice.getSubTotal());
-            double discountItem = Double.parseDouble(detailInvoice.getDiscount());
+            double subTotalItem = ValidationUtil.getValueDouble(detailInvoice.getSubTotal());
+            double discountItem = ValidationUtil.getValueDouble(detailInvoice.getDiscount());
             subTotalFac = subTotalFac + subTotalItem;
             discount = discount + discountItem;
             if(Boolean.parseBoolean(detailInvoice.getExistsTax())){

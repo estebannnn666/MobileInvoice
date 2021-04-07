@@ -140,12 +140,19 @@
                 android:textSize="14sp"
                 android:text="543.67"
                 android:textColor="#000000"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_marginLeft="15dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
             <TextView
                 android:layout_marginTop="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
-                android:drawableLeft="@drawable/ic_list_data"
                 android:text="@string/stock_select"
                 android:textColor="#000000"
                 android:textStyle="bold"/>
@@ -167,7 +174,6 @@
                 android:text="Unidades"
                 android:textColor="#000000"/>
         </LinearLayout>
-
         <Spinner
             android:id="@+id/selectDriveUnit"
             android:layout_marginTop="10dp"

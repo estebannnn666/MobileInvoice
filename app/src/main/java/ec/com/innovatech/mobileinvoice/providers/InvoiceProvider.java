@@ -19,10 +19,21 @@ public class InvoiceProvider {
     }
 
     public Task<Void> createHeaderInvoice(HeaderInvoice headerInvoice){
+        headerInvoice.setDiscount(headerInvoice.getDiscount().replace(",","."));
+        headerInvoice.setSubTotal(headerInvoice.getSubTotal().replace(",","."));
+        headerInvoice.setTotalInvoice(headerInvoice.getTotalInvoice().replace(",","."));
+        headerInvoice.setTotalIva(headerInvoice.getTotalIva().replace(",","."));
+        headerInvoice.setTotalNotTax(headerInvoice.getTotalNotTax().replace(",","."));
+        headerInvoice.setTotalTax(headerInvoice.getTotalTax().replace(",","."));
         return mDataBase.child(String.valueOf(headerInvoice.getIdInvoice())).child("header").setValue(headerInvoice);
     }
 
     public Task<Void> createDetailsInvoice(String idInvoice, List<DetailInvoice> detailsInvoice){
+        for (DetailInvoice detail: detailsInvoice){
+            detail.setSubTotal(detail.getSubTotal().replace(",","."));
+            detail.setDiscount(detail.getDiscount().replace(",","."));
+            detail.setUnitValue(detail.getUnitValue().replace(",","."));
+        }
         return mDataBase.child(idInvoice).child("details").setValue(detailsInvoice);
     }
 

@@ -6,6 +6,7 @@ import androidx.appcompat.widget.SearchView;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -32,6 +33,7 @@ import ec.com.innovatech.mobileinvoice.providers.ClientProvider;
 
 public class SearchClientActivity extends AppCompatActivity {
 
+    SharedPreferences mPrefUser;
     AlertDialog mDialog;
     ListView listView;
     ClientAdapter clientAdapter;
@@ -45,6 +47,7 @@ public class SearchClientActivity extends AppCompatActivity {
         setContentView(R.layout.activity_search_client);
         MyToolBar.show(this,"Clientes", true);
         mDialog = new SpotsDialog.Builder().setContext(SearchClientActivity.this).setMessage("Espere un momento").build();
+        mPrefUser = getApplicationContext().getSharedPreferences("user_session", MODE_PRIVATE);
         listView = findViewById(R.id.listSearchClients);
         lblListEmpty =  findViewById(R.id.txtListSearchEmpty);
         clientProvider = new ClientProvider();
@@ -70,7 +73,9 @@ public class SearchClientActivity extends AppCompatActivity {
 
     public void loadDataClient(){
         mDialog.show();
-        clientProvider.getListClientSorted().addListenerForSingleValueEvent(new ValueEventListener() {
+        String sellerId = mPrefUser.getString("identifier", "");
+        boolean isAdministrator = mPrefUser.getBoolean("isAdmin", false);
+        clientProvider.getListClientBySeller(isAdministrator, sellerId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
@@ -88,7 +93,9 @@ public class SearchClientActivity extends AppCompatActivity {
                                     client.setAddress(snapshot.child("address").getValue().toString());
                                     client.setCity(snapshot.child("city").getValue().toString());
                                     client.setTelephone(snapshot.child("telephone").getValue().toString());
-                                    client.setEmail(snapshot.child("email").getValue().toString());
+                                    client.setEmail(snapshot.child("email").getValue() != null ? snapshot.child("email").getValue().toString() : null);
+                                    client.setZoneTypeCode(snapshot.child("zoneTypeCode").getValue() != null ? Integer.parseInt(snapshot.child("zoneTypeCode").getValue().toString()) : null);
+                                    client.setZoneValueCode(snapshot.child("zoneValueCode").getValue() != null ? snapshot.child("zoneValueCode").getValue().toString() : null);
                                     listClients.add(client);
                                     clientAdapter = new ClientAdapter(SearchClientActivity.this, getBaseContext(), listClients);
                                     listView.setAdapter(clientAdapter);

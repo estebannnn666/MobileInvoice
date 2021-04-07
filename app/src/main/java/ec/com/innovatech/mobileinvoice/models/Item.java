@@ -11,12 +11,13 @@ public class Item implements Serializable {
     private String priceRetail;
     private String stock;
     private String commissionPercentage;
+    private String wholesaleCommissionPercentage;
 
 
     public Item(){
     }
 
-    public Item(Integer id, String barCode, String nameItem, String cost, String priceWholesaler, String priceRetail, String stock, String commissionPercentage){
+    public Item(Integer id, String barCode, String nameItem, String cost, String priceWholesaler, String priceRetail, String stock, String commissionPercentage, String wholesaleCommissionPercentage){
         this.id = id;
         this.barCode = barCode;
         this.nameItem = nameItem;
@@ -24,6 +25,7 @@ public class Item implements Serializable {
         this.priceWholesaler = priceWholesaler;
         this.priceRetail = priceRetail;
         this.stock = stock;
+        this.wholesaleCommissionPercentage = wholesaleCommissionPercentage;
         this.commissionPercentage = commissionPercentage;
     }
 
@@ -89,5 +91,13 @@ public class Item implements Serializable {
 
     public void setCommissionPercentage(String commissionPercentage) {
         this.commissionPercentage = commissionPercentage;
+    }
+
+    public String getWholesaleCommissionPercentage() {
+        return wholesaleCommissionPercentage;
+    }
+
+    public void setWholesaleCommissionPercentage(String wholesaleCommissionPercentage) {
+        this.wholesaleCommissionPercentage = wholesaleCommissionPercentage;
     }
 }

@@ -163,7 +163,7 @@ public class ListOrderActivity extends AppCompatActivity {
             dataEnd.set(Calendar.SECOND, 59);
             dataEnd.set(Calendar.MILLISECOND, 59);
             if(dateInvoiceCalendar.compareTo(dataBegin) >= 0 && dateInvoiceCalendar.compareTo(dataEnd) <= 0) {
-                totalValue = totalValue + Double.parseDouble(totalInvoice);
+                totalValue = totalValue + ValidationUtil.getValueDouble(totalInvoice);
                 totalDocuments++;
             }
         } catch (ParseException e) {
@@ -368,8 +368,8 @@ public class ListOrderActivity extends AppCompatActivity {
                 int quantityNew = Integer.parseInt(detailOrder.getQuantity());
                 quantityItem = quantityItem + quantityNew;
                 detail.setQuantity(""+quantityItem);
-                double subTotalItem = Double.parseDouble(detail.getSubTotal());
-                double subTotalNew = Double.parseDouble(detailOrder.getSubTotal());
+                double subTotalItem = ValidationUtil.getValueDouble(detail.getSubTotal());
+                double subTotalNew = ValidationUtil.getValueDouble(detailOrder.getSubTotal());
                 subTotalItem = subTotalItem + subTotalNew;
                 detail.setSubTotal(""+subTotalItem);
                 break;

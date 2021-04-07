@@ -49,6 +49,7 @@ public class GeneralFragment extends Fragment {
     TextInputEditText txtPriceRetail;
     TextInputEditText txtStock;
     TextInputEditText txtCommissionPercentage;
+    TextInputEditText txtWholesalerCommissionPercentage;
     Button btnSaveItem;
     SharedPreferences mPref;
     SharedPreferences.Editor editor;
@@ -65,7 +66,7 @@ public class GeneralFragment extends Fragment {
         View root = inflater.inflate(R.layout.fragment_general, container, false);
         mPref = getContext().getSharedPreferences("typeUser", Context.MODE_PRIVATE);
         editor = mPref.edit();
-        mDialog = new SpotsDialog.Builder().setContext(getActivity()).setMessage("Espere un momento").build();
+        mDialog = new SpotsDialog.Builder().setContext(getContext()).setMessage("Espere un momento").build();
         itemProvider = new ItemProvider();
         sequenceProvider = new SequenceProvider();
         txtBarcode = root.findViewById(R.id.txtBarCode);
@@ -76,12 +77,14 @@ public class GeneralFragment extends Fragment {
         txtStock = root.findViewById(R.id.txtStock);
         btnSaveItem = root.findViewById(R.id.btnSaveItem);
         txtCommissionPercentage = root.findViewById(R.id.txtPercentage);
+        txtWholesalerCommissionPercentage = root.findViewById(R.id.txtWholesalerPercentage);
         Bundle resourceBundle = getActivity().getIntent().getExtras();
         if(resourceBundle != null){
             updateSequence = Boolean.FALSE;
             Item itemEdit = (Item)resourceBundle.getSerializable("ITEM_SELECT");
             if(itemEdit != null) {
-                editor.putString("barcode", ""+itemEdit.getId());
+                editor.putString("idItem", ""+itemEdit.getId());
+                editor.putString("barcode", ""+itemEdit.getBarCode());
                 editor.apply();
                 txtBarcode.setText(itemEdit.getBarCode());
                 txtItemName.setText(itemEdit.getNameItem());
@@ -90,6 +93,7 @@ public class GeneralFragment extends Fragment {
                 txtPriceRetail.setText(itemEdit.getPriceRetail());
                 txtStock.setText(itemEdit.getStock());
                 txtCommissionPercentage.setText(itemEdit.getCommissionPercentage());
+                txtWholesalerCommissionPercentage.setText(itemEdit.getWholesaleCommissionPercentage());
                 sequenceItem = itemEdit.getId();
                 MyToolBar.show((AppCompatActivity) getActivity(),"Editar artículo", true);
             }
@@ -116,11 +120,13 @@ public class GeneralFragment extends Fragment {
         final String priceRetail = txtPriceRetail.getText().toString();
         final String stock = txtStock.getText().toString();
         final String commissionPercentage = txtCommissionPercentage.getText().toString();
+        final String wholesalerCommissionPercentage = txtWholesalerCommissionPercentage.getText().toString();
 
         if(!barcode.isEmpty() && !itemName.isEmpty() && !cost.isEmpty() && !priceWholesaler.isEmpty() && !priceRetail.isEmpty() && !stock.isEmpty() && !commissionPercentage.isEmpty()){
             if(barcode.length() <= 13){
-                Item item = new Item(sequenceItem, barcode, itemName, cost, priceWholesaler, priceRetail, stock, commissionPercentage);
-                editor.putString("barcode", ""+sequenceItem);
+                Item item = new Item(sequenceItem, barcode, itemName, cost, priceWholesaler, priceRetail, stock, commissionPercentage, wholesalerCommissionPercentage);
+                editor.putString("idItem", ""+sequenceItem);
+                editor.putString("barcode", barcode);
                 editor.apply();
                 create(item);
             }  else{

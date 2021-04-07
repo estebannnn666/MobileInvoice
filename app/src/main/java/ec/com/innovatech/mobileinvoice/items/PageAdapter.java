@@ -24,6 +24,8 @@ public class PageAdapter extends FragmentPagerAdapter {
                 return new TaxFragment();
             case 2:
                 return new DriveUnitFragment();
+            case 3:
+                return new ImageItemFragment();
             default:
                 return null;
         }

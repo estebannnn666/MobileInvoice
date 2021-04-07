@@ -54,8 +54,8 @@ public class ItemDialogAdapter extends BaseAdapter implements Filterable {
         TextView lblPriceMin = (TextView) convertView.findViewById(R.id.lblPriceMin);
         TextView lblPriceMax = (TextView) convertView.findViewById(R.id.lblPriceMax);
         TextView lblStock = (TextView) convertView.findViewById(R.id.lblStock);
-        String priceMinFormat = ValidationUtil.getTwoDecimal(Double.valueOf(item.getPriceRetail()));
-        String priceMaxFormat = ValidationUtil.getTwoDecimal(Double.valueOf(item.getPriceWholesaler()));
+        String priceMinFormat = ValidationUtil.getTwoDecimal(ValidationUtil.getValueDouble(item.getPriceRetail()));
+        String priceMaxFormat = ValidationUtil.getTwoDecimal(ValidationUtil.getValueDouble(item.getPriceWholesaler()));
         lblBarCode.setText(item.getBarCode());
         lblNameItem.setText(item.getNameItem());
         lblPriceMin.setText(priceMinFormat);

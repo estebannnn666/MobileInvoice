@@ -24,14 +24,21 @@
         </com.google.android.material.tabs.TabItem>
         <com.google.android.material.tabs.TabItem
             android:id="@+id/tabImps"
-            android:text="Impuestos"
+            android:text="Impuesto"
             android:icon="@drawable/icon_percentage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
         <com.google.android.material.tabs.TabItem
             android:id="@+id/tabUnit"
-            android:text="Un. Manejo"
+            android:text="Un.Manejo"
             android:icon="@drawable/icon_type"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <com.google.android.material.tabs.TabItem
+            android:id="@+id/tabImg"
+            android:text="Imagen"
+            android:icon="@drawable/icon_camera"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
     </com.google.android.material.tabs.TabLayout>

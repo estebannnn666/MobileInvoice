@@ -1,6 +1,7 @@
 package ec.com.innovatech.mobileinvoice.items;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 
@@ -16,6 +17,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
@@ -63,7 +65,8 @@ public class ListItemActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent intent = new Intent(ListItemActivity.this, ItemActivity.class);
-                intent.putExtra("ITEM_SELECT", itemAdapter.getListItems().get(position));
+                Item itemSelect = itemAdapter.getListItems().get(position);
+                intent.putExtra("ITEM_SELECT", itemSelect);
                 startActivity(intent);
             }
         });
@@ -86,6 +89,7 @@ public class ListItemActivity extends AppCompatActivity {
                         item.setPriceWholesaler(itemNode.child("dataItem").child("priceWholesaler").getValue().toString());
                         item.setCommissionPercentage(itemNode.child("dataItem").child("commissionPercentage").getValue().toString());
                         item.setStock(itemNode.child("dataItem").child("stock").getValue().toString());
+                        //item.setImage(itemNode.child("image") .getValue() != null ? itemNode.child("image").child("url").getValue().toString(): "");
                         listItems.add(item);
                     }
                     itemAdapter = new ItemAdapter(getBaseContext(), listItems);
